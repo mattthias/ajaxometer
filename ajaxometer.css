@@ -1,0 +1,16 @@
+/* This is a SVG CSS file */
+
+text {
+  fill: gray;
+  font-size: 30pt;
+  font-weight: bold;
+}
+
+rect.ping     { fill: #afa; }
+rect.download { fill: #faa; }
+rect.upload   { fill: #aaf; }
+
+text.ping     { fill: #F00; }
+text.download { fill: #000; }
+text.upload   { fill: #000; }
+

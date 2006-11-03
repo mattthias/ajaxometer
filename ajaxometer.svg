@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+<?xml-stylesheet href="ajaxometer.css" type="text/css"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 20010904//EN"
+    "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 1600 1200" preserveAspectRatio="none"
+     xmlns:xlink="http://www.w3.org/1999/xlink" onload='new AJAXOmeter(evt);'>
+     <text id="status" x="0" y="60"> </text>
+     <text x="1000" y="60">Latency</text>
+     <text x="1000" y="100">Up</text>
+     <text x="1000" y="140">Down</text>
+     <text id="latency" x="1240" y="60"> </text>
+     <text id="up_cps" x="1240" y="100"> </text>
+     <text id="down_cps" x="1240" y="140"> </text>
+     <script type="text/ecmascript" xlink:href="ajaxometer.js"></script>
+   </svg>
