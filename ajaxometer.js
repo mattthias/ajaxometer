@@ -518,11 +518,6 @@ function getObj(id) { /* {{{ */
 } /* }}} */
 function pushObj(o) { /* {{{ */
   _Objs.push(o);
-<? if (preg_match("/xend/", $_SERVER['SERVER_NAME'])) { ?>
-  if (document.getElementById("pushObjCt")) {
-    document.getElementById("pushObjCt").innerHTML = _Objs.length + " reg. obj.";
-  } 
-<? } ?>
   return _Objs.length-1;
 } /* }}} */
 
