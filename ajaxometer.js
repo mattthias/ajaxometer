@@ -1,12 +1,17 @@
 /** Config **/
 
 /* This controls how long a download should take. */
-var AJAXOmeterTestTime     = 100; // in miliseconds (this will only be an aproximation)
-var AJAXOmeterViewWidth    = 1600; // you need to change this in the .svg file as well.
-var AJAXOmeterViewHeight   = 1200; // you need to change htis in the .svg file as well.
-var AJAXOmeterBarWidth     = 40;
-var AJAXOmeterBarMaxHeight = AJAXOmeterViewHeight*0.8;
-var AJAXOmeterBarSpacing   = 10;
+var AJAXOmeterTestTime           = 1500; // in miliseconds (this will only be an aproximation)
+var AJAXOmeterViewWidth          = 1600; // you need to change this in the .svg file as well.
+var AJAXOmeterViewHeight         = 1200; // you need to change htis in the .svg file as well.
+var AJAXOmeterBarWidth           = 40;
+var AJAXOmeterBarMaxHeight       = AJAXOmeterViewHeight*0.8;
+var AJAXOmeterBarSpacing         = 10;
+var AJAXOmeterFPS                = 10;  // target frames per second
+var AJAXOmeterTerminalLineHeight = 40;
+var AJAXOmeterNumPingsToRun      = 10;
+var AJAXOmeterNumDLsToRun        = 3;
+var AJAXOmeterNumULsToRun        = 3;
 
 
 /** Browser Detection **/
@@ -25,6 +30,9 @@ else
 
 /** Code **/
 function AJAXOmeter(e) { /* {{{ */
+  var self = this;
+  this.objId = pushObj(this);
+  
   this.status           = "";
   this.latency          = 0;
   this.latency_tot      = 0;
@@ -36,15 +44,55 @@ function AJAXOmeter(e) { /* {{{ */
   this.goodUploadSize   = 0;
   this.bars             = new Array();
 
+  this.terminalBuffer   = new Array();
+
+  this.numPingsRan      = 0;
+  this.numDLCalibration = 0;
+  this.numULCalibration = 0;
+  this.numDLReal        = 0;
+  this.numULReal        = 0;
+
+  this.progressCircle   = null;
+
   
   //this.svgDocument = window.svgDocument == null ? e.target.ownerDocument : window.svgDocument;
   this.svgDocument = e.target.ownerDocument;
   this.svg         = this.svgDocument.documentElement;
 
+  var wolf_inc  = 0.05;
+  var wolf_opac = 1.0;
+
+  var num = 0;
+
+  var updateFrame = pushObj(function () {
+
+    self.terminalPrint("Analysis() -> " + Math.random());
+
+/*
+    var wolf = self.elt("wolf");
+    wolf.setAttributeNS(null, "fill-opacity", wolf_opac);
+    
+    wolf_opac += wolf_inc;
+    if (wolf_opac >= 1) {
+      wolf_inc = -wolf_inc;
+      wolf_opac = 0.9;
+    } else if (wolf_opac <=0) {
+      wolf_inc = -wolf_inc;
+      wolf_opac = 0.1;
+    }
+    */
+
+    num++;
+    if (num < 20) {
+    setTimeout("getObj("+updateFrame+")()", 1000/AJAXOmeterFPS)
+    }
+  });
+
+  //getObj(updateFrame)();
+
 
 
 /*
-  this.svg.appendChild(this.newText("Hello World", "M200 1000 L200 0"));
   this.svg.appendChild(this.newText("SALKSfjf", "M300 1000 L300 0"));
   */
 
@@ -115,7 +163,7 @@ AJAXOmeter.prototype.newText                     = function (txt, path, config) 
 
 
   var p = this.newElt("path", {'id':"textPath"+this.path_id, 'd':path});
-  var defs = this.newElt("defs", {}, p);
+  var defs = this.newElt("defs", {'id':'defsPath'+this.path_id}, p);
   this.svg.appendChild(defs);
 
 
@@ -132,6 +180,35 @@ AJAXOmeter.prototype.updateStats                 = function () { /* {{{ */
   this.elt("status").firstChild.data=this.status;
   this.elt("up_cps").firstChild.data=prettySize(this.up_cps) + "/s";
   this.elt("down_cps").firstChild.data=prettySize(this.down_cps) + "/s";
+
+
+  if (this.progressCircle == null) {
+    this.progressCircle = this.newElt("path", {'class':"progressCircle", "d":"M 800,400 A 200 200 0 0 1 800 400"});
+    this.svg.appendChild(this.progressCircle);
+  }
+
+  var progress = this.progressCircle; 
+
+  var radius = 200;
+  var theta = 2*Math.PI*this.percentDone();
+  if (theta == 2*Math.PI) theta *= 0.9999;
+  var x = (Math.sin(theta)*radius+800);
+  var y = (-Math.cos(theta)*radius+600);
+  /*
+  alert(x + " - " + y);
+  asdf();
+  */
+
+  var big = 0;
+  if (this.percentDone() > .5) big = 1;
+
+  progress.setAttributeNS(null, "d", "M 800,400 A 200 200 0 " + big + " 1 " + x + " " + y);
+
+  
+  /*
+     <path id="progressCircle" class="progressCircle" d="M 800,400   A 200 200 0 1 1 600 600" />
+   */
+
 } /* }}} */
 AJAXOmeter.prototype.elt                         = function (id) { /* {{{ */
   return this.svgDocument.getElementById(id);
@@ -139,6 +216,8 @@ AJAXOmeter.prototype.elt                         = function (id) { /* {{{ */
 AJAXOmeter.prototype.ping                        = function (toCallWhenDone) { /* {{{ */
   var self = this;
   var start = new Date();
+  self.terminalPrint("ping() -> ");
+
   pull("ajaxometer.php?len=1", "", function () {
     var end = new Date();
     self.latency      = end.getTime() - start.getTime();
@@ -146,15 +225,17 @@ AJAXOmeter.prototype.ping                        = function (toCallWhenDone) { /
     self.latency_ct  += 1;
     self.lastRunTime  = end.getTime() - start.getTime();
     self.updateStats();
-    //self.pushBar(self.latency + " ms", self.latency, "#fdd");
-    self.pushBar(self.latency + " ms", self.latency, "ping");
+    //self.pushBar(self.latency + " ms", self.latency, "ping");
+    self.terminalPrint("ping() -> " + self.latency + " ms", true);
     if (toCallWhenDone) { toCallWhenDone(); }
   });
 } /* }}} */
 AJAXOmeter.prototype.downloadTest                = function (size, toCallWhenDone) { /* {{{ */
   var self = this;
 
-  self.status = "Testing download ["+prettySize(size)+"]";
+  //self.status = "Testing download ["+prettySize(size)+"]";
+
+  self.terminalPrint("download("+prettySize(size)+") -> ");
 
   var start = new Date();
   pull("ajaxometer.php?len="+size,"", function () {
@@ -162,6 +243,8 @@ AJAXOmeter.prototype.downloadTest                = function (size, toCallWhenDon
     self.lastRunTime = end.getTime() - start.getTime();
     var downloadTime = (self.lastRunTime - self.latency) * 0.001;
     self.down_cps    = size / downloadTime;
+    //self.pushBar(prettySize(size), size, "download");
+    self.terminalPrint("download("+prettySize(size)+") -> " + self.lastRunTime + " ms", true);
     self.updateStats();
     if (toCallWhenDone) { toCallWhenDone(); }
   });
@@ -170,7 +253,8 @@ AJAXOmeter.prototype.uploadTest                  = function (size, toCallWhenDon
   var self = this;
   var data = genStr(size);
 
-  self.status = "Testing upload ["+prettySize(size)+"]";
+  //self.status = "Testing upload ["+prettySize(size)+"]";
+  self.terminalPrint("upload("+prettySize(size)+") -> ");
 
   var start = new Date();
   pull("ajaxometer.php","data="+data, function () {
@@ -178,6 +262,8 @@ AJAXOmeter.prototype.uploadTest                  = function (size, toCallWhenDon
     self.lastRunTime = end.getTime() - start.getTime();
     var uploadTime = (self.lastRunTime - self.latency) * 0.001;
     self.up_cps    = size / uploadTime;
+    //self.pushBar(prettySize(size), size, "upload");
+    self.terminalPrint("upload("+prettySize(size)+") -> " + self.lastRunTime + " ms", true);
     self.updateStats();
     if (toCallWhenDone) { toCallWhenDone(); }
   });
@@ -187,7 +273,8 @@ AJAXOmeter.prototype.calibrate                   = function (toCallWhenDone) { /
 
   function runPingTest(ct, toCallWhenDone) {
     if (ct > 0) {
-      self.status = "Calculating Latency " + ct + "...";
+      self.numPingsRan++;
+      //self.status = "Calculating Latency " + ct + "...";
       self.ping(function () { runPingTest(ct-1, toCallWhenDone); });
     } else {
       if (toCallWhenDone != null) toCallWhenDone();
@@ -198,8 +285,10 @@ AJAXOmeter.prototype.calibrate                   = function (toCallWhenDone) { /
     if (self.lastRunTime < AJAXOmeterTestTime) {
       if (self.lastRunTime*2 > AJAXOmeterTestTime) 
         size *= (AJAXOmeterTestTime/self.lastRunTime)*0.6;
+      self.numDLCalibration++;
       self.downloadTest(size, function () { runDownloadTest(size*2, toCallWhenDone); });
     } else {
+      self.numDLReal++;
       self.goodDownloadSize = size * (AJAXOmeterTestTime/self.lastRunTime); 
       if (toCallWhenDone != null) toCallWhenDone();
     }
@@ -209,8 +298,10 @@ AJAXOmeter.prototype.calibrate                   = function (toCallWhenDone) { /
     if (self.lastRunTime < AJAXOmeterTestTime) {
       if (self.lastRunTime*2 > AJAXOmeterTestTime) 
         size *= (AJAXOmeterTestTime/self.lastRunTime)*0.6; 
+      self.numULCalibration++;
       self.uploadTest(size, function () { runUploadTest(size*2, toCallWhenDone); });
     } else {
+      self.numULReal++;
       self.goodUploadSize = size * (AJAXOmeterTestTime/self.lastRunTime); 
       if (toCallWhenDone != null) toCallWhenDone();
     }
@@ -224,6 +315,16 @@ AJAXOmeter.prototype.calibrate                   = function (toCallWhenDone) { /
       runUploadTest(1024, toCallWhenDone);
     }); 
   });
+} /* }}} */
+AJAXOmeter.prototype.speedTest                   = function () { /* {{{ */
+  var self = this;
+
+  function RunSpeedTests () {
+    self.updateStats();
+  }
+
+  this.calibrate(RunSpeedTests);
+
 } /* }}} */
 AJAXOmeter.prototype.pushBar                     = function (label, height, cls) { /* {{{ */
   var self = this;
@@ -261,14 +362,52 @@ AJAXOmeter.prototype.pushBar                     = function (label, height, cls)
   }
 
 } /* }}} */
+AJAXOmeter.prototype.terminalPrint               = function (str, replaceLastLine) { /* {{{ */
+  var line = this.newText(str, "M0 200 L1200 200", {'class':'terminal'});
+  this.svg.appendChild(line);
 
-AJAXOmeter.prototype.speedTest                   = function () { /* {{{ */
-  var self = this;
-
-  function RunSpeedTests () {
+  if (replaceLastLine) {
+    var last = this.terminalBuffer.pop();
+    this.svg.removeChild(this.elt('defsPath'+last.pathId));
+    this.svg.removeChild(last.line);
   }
 
-  this.calibrate(RunSpeedTests);
+  this.terminalBuffer.push({'str':str, 'line':line, 'pathId':this.path_id});
+  
+  var ypos = AJAXOmeterTerminalLineHeight;
+  for (var i=this.terminalBuffer.length-1; i >= 0; --i) {
+
+
+    if (ypos > AJAXOmeterViewHeight) {
+      if (this.terminalBuffer[i].line != null) {
+        this.svg.removeChild(this.elt('defsPath'+this.terminalBuffer[i].pathId));
+        this.svg.removeChild(this.terminalBuffer[i].line);
+        this.terminalBuffer[i].line = null;
+        break;
+      }
+    } else {
+      this.elt('textPath'+this.terminalBuffer[i].pathId).setAttributeNS(null, "d", 
+        "M10 " + ypos + " L" + AJAXOmeterViewWidth + " " + ypos);
+    }
+    ypos += AJAXOmeterTerminalLineHeight;
+  }
+
+
+} /* }}} */
+AJAXOmeter.prototype.percentDone                 = function () { /* {{{ */
+  var PingsPortion         = 0.2;
+  var DLCalibrationPortion = 0.4;
+  var ULCalibrationPortion = 0.4;
+  var DLRealPortion        = 0.0;
+  var ULRealPortion        = 0.0;
+
+  return 0.0
+    + (this.numPingsRan / AJAXOmeterNumPingsToRun) * PingsPortion 
+    + (this.numDLCalibration / (this.numDLCalibration + (this.numDLReal > 0 ? 0 : 1))) * DLCalibrationPortion 
+    + (this.numULCalibration / (this.numULCalibration + (this.numULReal > 0 ? 0 : 1))) * ULCalibrationPortion 
+    + (this.numDLReal / AJAXOmeterNumDLsToRun) * DLRealPortion 
+    + (this.numULReal / AJAXOmeterNumULsToRun) * ULRealPortion 
+    ;
 } /* }}} */
 
 
@@ -304,7 +443,6 @@ function pull(src, post, callback, opt_method) { /* {{{ */
     alert("pull called with an invalid source = null");
   }
 } /* }}} */
-
 function isArray(obj) { /* {{{ */
   return (obj &&
       obj.splice &&
@@ -367,5 +505,26 @@ function genStr(len) { /* {{{ */
     ret += ret;
   }
 } /* }}} */
+
+
+var _Objs = new Array(); /* for _(set|get|push)Obj */
+
+function setObj(id, o) { /* {{{ */
+  _Objs[id] = o;
+} /* }}} */
+function getObj(id) { /* {{{ */
+  if (id == null) return null;
+  return _Objs[id];
+} /* }}} */
+function pushObj(o) { /* {{{ */
+  _Objs.push(o);
+<? if (preg_match("/xend/", $_SERVER['SERVER_NAME'])) { ?>
+  if (document.getElementById("pushObjCt")) {
+    document.getElementById("pushObjCt").innerHTML = _Objs.length + " reg. obj.";
+  } 
+<? } ?>
+  return _Objs.length-1;
+} /* }}} */
+
 
 /* }}} */

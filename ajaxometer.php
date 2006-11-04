@@ -1,6 +1,6 @@
 <?php
-$ajaxometer_width  = 400;
-$ajaxometer_height = 300;
+$ajaxometer_width  = 800;
+$ajaxometer_height = 600;
 
 if (isset($_REQUEST['len']))  { die(str_repeat("x", $_REQUEST['len'])); }
 if (isset($_REQUEST['data'])) { die ("null"); }

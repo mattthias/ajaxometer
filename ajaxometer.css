@@ -1,8 +1,18 @@
 /* This is a SVG CSS file */
 
+svg {
+  background-color: #ddd;
+}
+
 text {
   fill: gray;
-  font-size: 30pt;
+  font-size: 30px;
+  font-weight: bold;
+}
+
+text.terminal {
+  fill: #999;
+  font-size: 30px;
   font-weight: bold;
 }
 
@@ -13,4 +23,17 @@ rect.upload   { fill: #aaf; }
 text.ping     { fill: #F00; }
 text.download { fill: #000; }
 text.upload   { fill: #000; }
+
+path.progressCircle {
+  stroke-width: 20;
+  fill: none;
+  stroke-dasharray: 30, 9;
+  stroke-opacity: 0.5;
+  stroke: black;
+}
+
+path.wolf{
+  fill: #8f352d;
+}
+
 
