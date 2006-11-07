@@ -1,17 +1,41 @@
 /** Config **/
 
 /* This controls how long a download should take. */
-var AJAXOmeterTestTime           = 1500; // in miliseconds (this will only be an aproximation)
+var AJAXOmeterTestTime           = 1000; // in miliseconds (this will only be an aproximation)
+//var AJAXOmeterTestTime           = 10; // in miliseconds (this will only be an aproximation)
 var AJAXOmeterViewWidth          = 1600; // you need to change this in the .svg file as well.
 var AJAXOmeterViewHeight         = 1200; // you need to change htis in the .svg file as well.
-var AJAXOmeterBarWidth           = 40;
-var AJAXOmeterBarMaxHeight       = AJAXOmeterViewHeight*0.8;
-var AJAXOmeterBarSpacing         = 10;
-var AJAXOmeterFPS                = 10;  // target frames per second
 var AJAXOmeterTerminalLineHeight = 40;
-var AJAXOmeterNumPingsToRun      = 10;
-var AJAXOmeterNumDLsToRun        = 3;
-var AJAXOmeterNumULsToRun        = 3;
+var AJAXOmeterNumPingsToRun      = 15;
+var AJAXOmeterNumDLsToRun        = 5;
+var AJAXOmeterNumULsToRun        = 5;
+var AJAXOmeterAvgModemSpeed      = 28800;
+var AJAXOmeterAvgWebPageSize     = 130000;
+var AJAXOmeterProtocolOverhead   = 1.08; // +8% or there abouts ... 
+
+// all measurements in bits
+var AJAXOmeterLineTypes = new Array(
+       {name: '14.4k Modem'         , up:14400       , down:14400       } 
+     , {name: '28.8k Modem'         , up:28800       , down:28800       } 
+     , {name: '56k Modem'           , up:56000       , down:56200       } 
+     , {name: '1.5M ADSL'           , up:512000      , down:1500000     } 
+     , {name: 'T1'                  , up:1544000     , down:1544000     } 
+     , {name: 'E1'                  , up:2048000     , down:2048000     } 
+     , {name: 'Dual T1'             , up:3088000     , down:3088000     } 
+     , {name: '7M ADSL'             , up:1000000     , down:7000000     } 
+     , {name: 'High Speed Wireless' , up:7000000     , down:7000000     } 
+     , {name: '10M Ethernet'        , up:10000000    , down:10000000    } 
+     , {name: 'T3'                  , up:45000000    , down:45000000    } 
+     , {name: '100M Ethernet'       , up:100000000   , down:100000000   } 
+     , {name: 'OC3'                 , up:155000000   , down:155000000   } 
+     , {name: 'OC12'                , up:622000000   , down:622000000   } 
+     , {name: '1G Ethernet'         , up:1000000000  , down:1000000000  } 
+     , {name: 'OC48'                , up:2500000000  , down:2500000000  } 
+     , {name: 'OC192'               , up:9600000000  , down:9600000000  } 
+     , {name: '10G Ethernet'        , up:10000000000 , down:10000000000 } 
+  );
+
+
 
 
 /** Browser Detection **/
@@ -33,71 +57,45 @@ function AJAXOmeter(e) { /* {{{ */
   var self = this;
   this.objId = pushObj(this);
   
-  this.status           = "";
-  this.latency          = 0;
-  this.latency_tot      = 0;
-  this.latency_ct       = 0;
-  this.up_cps           = 0;
-  this.down_cps         = 0;
-  this.lastRunTime      = 0;
-  this.goodDownloadSize = 0;
-  this.goodUploadSize   = 0;
-  this.bars             = new Array();
+  this.status                 = "";
+  this.latency_tot            = 0;
+  this.latency_ct             = 0;
+  this.uploaded               = 0;
+  this.uploaded_time          = 0; // in seconds, minus the avg latency.
+  this.lastRunTime            = 0;
+  this.goodDLSize             = 0;
+  this.goodULSize             = 0;
 
-  this.terminalBuffer   = new Array();
+  this.terminalBuffer         = new Array();
 
-  this.numPingsRan      = 0;
-  this.numDLCalibration = 0;
-  this.numULCalibration = 0;
-  this.numDLReal        = 0;
-  this.numULReal        = 0;
+  this.numPingsRan            = 0;
+  this.numDLCalibration       = 0;
+  this.numULCalibration       = 0;
+  this.numDLReal              = 0;
+  this.numULReal              = 0;
+  this.totalDLCalibrationTime = 0;
+  this.totalULCalibrationTime = 0;
 
-  this.progressCircle   = null;
+  this.progressCircle         = null;
+  this.progressTriangle       = null;
+  this.progressText           = null;
 
   
-  //this.svgDocument = window.svgDocument == null ? e.target.ownerDocument : window.svgDocument;
   this.svgDocument = e.target.ownerDocument;
   this.svg         = this.svgDocument.documentElement;
 
-  var wolf_inc  = 0.05;
-  var wolf_opac = 1.0;
 
-  var num = 0;
-
-  var updateFrame = pushObj(function () {
-
-    self.terminalPrint("Analysis() -> " + Math.random());
-
-/*
-    var wolf = self.elt("wolf");
-    wolf.setAttributeNS(null, "fill-opacity", wolf_opac);
-    
-    wolf_opac += wolf_inc;
-    if (wolf_opac >= 1) {
-      wolf_inc = -wolf_inc;
-      wolf_opac = 0.9;
-    } else if (wolf_opac <=0) {
-      wolf_inc = -wolf_inc;
-      wolf_opac = 0.1;
-    }
-    */
-
-    num++;
-    if (num < 20) {
-    setTimeout("getObj("+updateFrame+")()", 1000/AJAXOmeterFPS)
-    }
-  });
-
-  //getObj(updateFrame)();
+  this.results_x              = parseInt(this.elt("results").getAttributeNS(null, "x")) + 20;
+  this.results_y              = parseInt(this.elt("results").getAttributeNS(null, "y")) + AJAXOmeterTerminalLineHeight;
+  this.summary_x              = parseInt(this.elt("summary").getAttributeNS(null, "x")) + 20;
+  this.summary_y              = parseInt(this.elt("summary").getAttributeNS(null, "y")) + AJAXOmeterTerminalLineHeight;
 
 
+  this.summaryStubText = this.newText("Running Tests...", {x:this.summary_x+230, y:this.summary_y+75} );
+  this.svg.appendChild(this.summaryStubText);
 
-/*
-  this.svg.appendChild(this.newText("SALKSfjf", "M300 1000 L300 0"));
-  */
 
   this.updateStats();
-
   this.speedTest();
 } /* }}} */
 
@@ -157,7 +155,7 @@ AJAXOmeter.prototype.newElt                      = function (type) { /* {{{ */
   }
   return elt;
 } /* }}} */
-AJAXOmeter.prototype.newText                     = function (txt, path, config) { /* {{{ */
+AJAXOmeter.prototype.newTextOnPath               = function (txt, path, config) { /* {{{ */
   var xlinkns = "http://www.w3.org/1999/xlink";
   this.path_id = this.path_id == undefined ? 0 : this.path_id+1;
 
@@ -175,39 +173,76 @@ AJAXOmeter.prototype.newText                     = function (txt, path, config) 
   var textNode = this.newElt("text", config, textPath);
   return textNode;
 } /* }}} */
-AJAXOmeter.prototype.updateStats                 = function () { /* {{{ */
-  this.elt("latency").firstChild.data="~" + (this.latency_tot/this.latency_ct).toFixed(1) + " ms";
-  this.elt("status").firstChild.data=this.status;
-  this.elt("up_cps").firstChild.data=prettySize(this.up_cps) + "/s";
-  this.elt("down_cps").firstChild.data=prettySize(this.down_cps) + "/s";
+AJAXOmeter.prototype.newText                     = function (txt, config) { /* {{{ */
+  var data = this.svgDocument.createTextNode(txt);
 
+  var textNode = this.newElt("text", config, data);
+  return textNode;
+} /* }}} */
+AJAXOmeter.prototype.updateStats                 = function () { /* {{{ */
 
   if (this.progressCircle == null) {
     this.progressCircle = this.newElt("path", {'class':"progressCircle", "d":"M 800,400 A 200 200 0 0 1 800 400"});
     this.svg.appendChild(this.progressCircle);
+
+    this.progressTriangle = this.newElt("polygon", {'class':"progressTriangle", "points":"800,400 800,401 800,402"});
+    this.svg.appendChild(this.progressTriangle);
   }
+
+
+  var center_x = 800;
+  var center_y = 600;
+  var theta = 2*Math.PI*this.percentDone();
+  if (theta == 2*Math.PI) theta *= 0.9999;
+
+  /* Progress Circle */
 
   var progress = this.progressCircle; 
 
-  var radius = 200;
-  var theta = 2*Math.PI*this.percentDone();
-  if (theta == 2*Math.PI) theta *= 0.9999;
-  var x = (Math.sin(theta)*radius+800);
-  var y = (-Math.cos(theta)*radius+600);
-  /*
-  alert(x + " - " + y);
-  asdf();
-  */
+  var progressCircle_radius = 200;
+
+  var x = (Math.sin(theta)*progressCircle_radius+center_x);
+  var y = (-Math.cos(theta)*progressCircle_radius+center_y);
 
   var big = 0;
   if (this.percentDone() > .5) big = 1;
 
-  progress.setAttributeNS(null, "d", "M 800,400 A 200 200 0 " + big + " 1 " + x + " " + y);
+  progress.setAttributeNS(null, "d", "M " + center_x + "," + (center_y-progressCircle_radius) 
+    + " A 200 200 0 " + big + " 1 " + x + " " + y);
 
-  
-  /*
-     <path id="progressCircle" class="progressCircle" d="M 800,400   A 200 200 0 1 1 600 600" />
-   */
+
+  /* Triangle */
+  var triangle_radius = 250;
+  var t_height = 15; // in .. pixels, sort of .. height to end points, not real triangle math here ..
+  var t_width  = .05; // in radians
+  var tx1 = (Math.sin(theta)            * (triangle_radius-t_height) + center_x);
+  var ty1 = (-Math.cos(theta)           * (triangle_radius-t_height) + center_y);
+  var tx2 = (Math.sin(theta  - t_width) * (triangle_radius+t_height) + center_x);
+  var ty2 = (-Math.cos(theta - t_width) * (triangle_radius+t_height) + center_y);
+  var tx3 = (Math.sin(theta  + t_width) * (triangle_radius+t_height) + center_x);
+  var ty3 = (-Math.cos(theta + t_width) * (triangle_radius+t_height) + center_y);
+
+  this.progressTriangle.setAttributeNS(null, "points", 
+      tx1   + "," + ty1 + " "
+      + tx2 + "," + ty2 + " "
+      + tx3 + "," + ty3);
+
+  /* Text */
+  var text_char_box = 20;
+
+  var text_x = (Math.sin(theta)  * (triangle_radius+t_height+text_char_box) + center_x);
+  var text_y = (-Math.cos(theta) * (triangle_radius+t_height+text_char_box) + center_y);
+
+  var align = this.percentDone() > .5 ? "end" : "start";
+
+  if (this.progressText) {
+    this.svg.removeChild(this.progressText);
+  }
+
+
+  this.progressText = this.newElt("text", {'x': text_x, 'y': text_y, "text-anchor":align, 'class':'status'}, 
+    this.svgDocument.createTextNode(this.status));
+  this.svg.appendChild(this.progressText);
 
 } /* }}} */
 AJAXOmeter.prototype.elt                         = function (id) { /* {{{ */
@@ -220,20 +255,17 @@ AJAXOmeter.prototype.ping                        = function (toCallWhenDone) { /
 
   pull("ajaxometer.php?len=1", "", function () {
     var end = new Date();
-    self.latency      = end.getTime() - start.getTime();
-    self.latency_tot += end.getTime() - start.getTime();
+    var latency = end.getTime() - start.getTime();
+    self.latency_tot += latency;
     self.latency_ct  += 1;
-    self.lastRunTime  = end.getTime() - start.getTime();
+    self.lastRunTime  = latency;
     self.updateStats();
-    //self.pushBar(self.latency + " ms", self.latency, "ping");
-    self.terminalPrint("ping() -> " + self.latency + " ms", true);
+    self.terminalPrint("ping() -> " + latency + " ms", true);
     if (toCallWhenDone) { toCallWhenDone(); }
   });
 } /* }}} */
 AJAXOmeter.prototype.downloadTest                = function (size, toCallWhenDone) { /* {{{ */
   var self = this;
-
-  //self.status = "Testing download ["+prettySize(size)+"]";
 
   self.terminalPrint("download("+prettySize(size)+") -> ");
 
@@ -241,9 +273,9 @@ AJAXOmeter.prototype.downloadTest                = function (size, toCallWhenDon
   pull("ajaxometer.php?len="+size,"", function () {
     var end = new Date();
     self.lastRunTime = end.getTime() - start.getTime();
-    var downloadTime = (self.lastRunTime - self.latency) * 0.001;
-    self.down_cps    = size / downloadTime;
-    //self.pushBar(prettySize(size), size, "download");
+    var downloadTime = (self.lastRunTime - self.getAvgLatency()) * 0.001;
+    self.downloaded      += size;
+    self.downloaded_time += downloadTime;
     self.terminalPrint("download("+prettySize(size)+") -> " + self.lastRunTime + " ms", true);
     self.updateStats();
     if (toCallWhenDone) { toCallWhenDone(); }
@@ -253,16 +285,15 @@ AJAXOmeter.prototype.uploadTest                  = function (size, toCallWhenDon
   var self = this;
   var data = genStr(size);
 
-  //self.status = "Testing upload ["+prettySize(size)+"]";
   self.terminalPrint("upload("+prettySize(size)+") -> ");
 
   var start = new Date();
   pull("ajaxometer.php","data="+data, function () {
     var end = new Date();
     self.lastRunTime = end.getTime() - start.getTime();
-    var uploadTime = (self.lastRunTime - self.latency) * 0.001;
-    self.up_cps    = size / uploadTime;
-    //self.pushBar(prettySize(size), size, "upload");
+    var uploadTime = (self.lastRunTime - self.getAvgLatency()) * 0.001;
+    self.uploaded      += size;
+    self.uploaded_time += uploadTime;
     self.terminalPrint("upload("+prettySize(size)+") -> " + self.lastRunTime + " ms", true);
     self.updateStats();
     if (toCallWhenDone) { toCallWhenDone(); }
@@ -270,45 +301,54 @@ AJAXOmeter.prototype.uploadTest                  = function (size, toCallWhenDon
 } /* }}} */
 AJAXOmeter.prototype.calibrate                   = function (toCallWhenDone) { /* {{{ */
   var self = this;
+  var total_dl_calib = 0;
+  var total_ul_calib = 0;
+  var calibration_slack = 0.92;
 
   function runPingTest(ct, toCallWhenDone) {
     if (ct > 0) {
       self.numPingsRan++;
-      //self.status = "Calculating Latency " + ct + "...";
       self.ping(function () { runPingTest(ct-1, toCallWhenDone); });
     } else {
+      self.snapshotProgress("Latency: ~" + self.getAvgLatency() + " ms");
+      self.printResults("Request Latency: ~" + self.getAvgLatency() + " ms");
       if (toCallWhenDone != null) toCallWhenDone();
     }
   }
 
   function runDownloadTest(size, toCallWhenDone) {
-    if (self.lastRunTime < AJAXOmeterTestTime) {
+    self.totalDLCalibrationTime += self.lastRunTime;
+    if (self.lastRunTime < AJAXOmeterTestTime * calibration_slack) {
       if (self.lastRunTime*2 > AJAXOmeterTestTime) 
         size *= (AJAXOmeterTestTime/self.lastRunTime)*0.6;
       self.numDLCalibration++;
       self.downloadTest(size, function () { runDownloadTest(size*2, toCallWhenDone); });
     } else {
-      self.numDLReal++;
-      self.goodDownloadSize = size * (AJAXOmeterTestTime/self.lastRunTime); 
+      self.goodDLSize = size * .5 * (AJAXOmeterTestTime/self.lastRunTime); 
+      self.terminalPrint("DL Size Calibrated: " + prettySize(self.goodDLSize));
+      self.printResults("Test Download Size: " + prettySize(self.goodDLSize) + "B");
       if (toCallWhenDone != null) toCallWhenDone();
     }
   }
 
   function runUploadTest(size, toCallWhenDone) {
-    if (self.lastRunTime < AJAXOmeterTestTime) {
+    self.totalULCalibrationTime += self.lastRunTime;
+    if (self.lastRunTime < AJAXOmeterTestTime * calibration_slack) {
       if (self.lastRunTime*2 > AJAXOmeterTestTime) 
         size *= (AJAXOmeterTestTime/self.lastRunTime)*0.6; 
       self.numULCalibration++;
       self.uploadTest(size, function () { runUploadTest(size*2, toCallWhenDone); });
     } else {
-      self.numULReal++;
-      self.goodUploadSize = size * (AJAXOmeterTestTime/self.lastRunTime); 
+      self.goodULSize = size * .5 * (AJAXOmeterTestTime/self.lastRunTime); 
+      self.terminalPrint("UL Size Calibrated: " + prettySize(self.goodULSize));
+      self.printResults("Test Upload Size: " + prettySize(self.goodULSize) + "B");
+      self.snapshotProgress("Calibration Done");
       if (toCallWhenDone != null) toCallWhenDone();
     }
   }
 
 
-  runPingTest(10, function () { 
+  runPingTest(AJAXOmeterNumPingsToRun, function () { 
     self.lastRunTime = 0;
     runDownloadTest(1024, function () {
       self.lastRunTime = 0;
@@ -319,51 +359,59 @@ AJAXOmeter.prototype.calibrate                   = function (toCallWhenDone) { /
 AJAXOmeter.prototype.speedTest                   = function () { /* {{{ */
   var self = this;
 
+
+  function runDLTest(ct, toCallWhenDone) {
+    if (ct > 0) {
+      self.downloadTest(self.goodDLSize, function () { 
+          self.numDLReal++;
+          runDLTest(ct-1, toCallWhenDone); });
+    } else {
+      self.snapshotProgress("Download: ~" + self.getAvgDLRate());
+      self.printResults("Download Speed: " + self.getAvgDLRate());
+      if (toCallWhenDone != null) toCallWhenDone();
+    }
+  }
+  function runULTest(ct, toCallWhenDone) {
+    if (ct > 0) {
+      self.uploadTest(self.goodULSize, function () { 
+          self.numULReal++;
+          runULTest(ct-1, toCallWhenDone); });
+    } else {
+      self.snapshotProgress("Upload: ~" + self.getAvgULRate());
+      self.printResults("Upload Speed: " + self.getAvgULRate());
+      if (toCallWhenDone != null) toCallWhenDone();
+    }
+  }
+
+  function printSummary() {
+    self.printSummary("Estimated Line Type: " + self.estimateLineType());
+    self.printSummary("( ~" + (self.getAvgDLbps()/AJAXOmeterAvgModemSpeed).toFixed(1) + " x faster than avg. modem speeds)");
+    /*
+    self.printSummary("  faster than a 56k modem");
+    */
+    self.printSummary("Time to load an average web page: ~" + ((AJAXOmeterAvgWebPageSize*8)/self.getAvgDLbps()).toFixed(2) + " s");
+    self.printSummary("Time to download 10MB file: ~" + ((10000000*8)/self.getAvgDLbps()).toFixed(0) + " s");
+  }
+
   function RunSpeedTests () {
-    self.updateStats();
+    self.downloaded      = 0;
+    self.downloaded_time = 0;
+    self.uploaded        = 0;
+    self.uploaded_time   = 0;
+    runULTest(AJAXOmeterNumDLsToRun, function () {
+      runDLTest(AJAXOmeterNumULsToRun, function () { 
+        self.printResults("Speed Test Finnished.");
+        printSummary();
+        self.updateStats();
+      });
+    });
   }
 
   this.calibrate(RunSpeedTests);
 
 } /* }}} */
-AJAXOmeter.prototype.pushBar                     = function (label, height, cls) { /* {{{ */
-  var self = this;
-
-  var x = (this.bars.length) * (AJAXOmeterBarWidth+AJAXOmeterBarSpacing);
-
-  var rect = this.newElt("rect", {'class': cls, 'x':x, 
-    'width':AJAXOmeterBarWidth, y:100, height:AJAXOmeterViewHeight});
-
-  var tx = x + AJAXOmeterBarWidth-2;
-  var text = this.newText(label, "M"+tx+" "+AJAXOmeterViewHeight+" L"+tx+" 0", {'class':cls});
-
-  this.svg.appendChild(rect);
-  this.svg.appendChild(text);
-
-  var bar = {'label':label, 'height':height, 'cls':cls, 
-    'rect':rect, 'text':text};
-
-  this.bars.push(bar);
-
-  var heights = {ping: 100, download: 56000, upload: 56000};
-  for (var i in this.bars) {
-    var bar = this.bars[i];
-    if (heights[bar.cls] == undefined) heights[bar.cls] = 0;
-
-    if (bar.height > heights[bar.cls]) {
-      heights[bar.cls] = bar.height;
-    }
-  }
-
-  for (var i in this.bars) {
-    var bar = this.bars[i];
-    bar.rect.setAttributeNS(null, "height", ((bar.height/heights[bar.cls])*AJAXOmeterBarMaxHeight));
-    bar.rect.setAttributeNS(null, "y", AJAXOmeterViewHeight-((bar.height/heights[bar.cls])*AJAXOmeterBarMaxHeight));
-  }
-
-} /* }}} */
 AJAXOmeter.prototype.terminalPrint               = function (str, replaceLastLine) { /* {{{ */
-  var line = this.newText(str, "M0 200 L1200 200", {'class':'terminal'});
+  var line = this.newTextOnPath(str, "M0 200 L1200 200", {'class':'terminal'});
   this.svg.appendChild(line);
 
   if (replaceLastLine) {
@@ -394,21 +442,100 @@ AJAXOmeter.prototype.terminalPrint               = function (str, replaceLastLin
 
 
 } /* }}} */
+AJAXOmeter.prototype.printResults                = function (str) { /* {{{ */
+  this.svg.appendChild(this.newText(str, {x:this.results_x, y:this.results_y}));
+  this.results_y += AJAXOmeterTerminalLineHeight;
+} /* }}} */
+AJAXOmeter.prototype.printSummary                = function (str) { /* {{{ */
+  if (this.summaryStubText != null) {
+    this.svg.removeChild(this.summaryStubText);
+    this.summaryStubText = null;
+  }
+
+  this.svg.appendChild(this.newText(str, {x:this.summary_x, y:this.summary_y}));
+  this.summary_y += AJAXOmeterTerminalLineHeight;
+} /* }}} */
 AJAXOmeter.prototype.percentDone                 = function () { /* {{{ */
-  var PingsPortion         = 0.2;
-  var DLCalibrationPortion = 0.4;
-  var ULCalibrationPortion = 0.4;
-  var DLRealPortion        = 0.0;
-  var ULRealPortion        = 0.0;
+  var PingsPortion              = 0.125;
+  var DLCalibrationPortion      = 0.125;
+  var ULCalibrationPortion      = 0.125;
+  var DLRealPortion             = 0.3125;
+  var ULRealPortion             = 0.3125;
+
+  //var magicCalibrationTimeRatio = 2.7;
+  var magicCalibrationTimeRatio = 2.5;
+  var magicCalibrationTime      = AJAXOmeterTestTime * magicCalibrationTimeRatio;
+
+  var DLCalibDone               = this.totalDLCalibrationTime / magicCalibrationTime;
+  var ULCalibDone               = this.totalULCalibrationTime / magicCalibrationTime;
+  DLCalibDone                   = DLCalibDone > 1 ? 1 : DLCalibDone;
+  ULCalibDone                   = ULCalibDone > 1 ? 1 : ULCalibDone;
+  DLCalibDone                   = this.numDLReal > 0 ? 1 : DLCalibDone;
+  ULCalibDone                   = this.numULReal > 0 ? 1 : ULCalibDone;
+
+
 
   return 0.0
     + (this.numPingsRan / AJAXOmeterNumPingsToRun) * PingsPortion 
-    + (this.numDLCalibration / (this.numDLCalibration + (this.numDLReal > 0 ? 0 : 1))) * DLCalibrationPortion 
-    + (this.numULCalibration / (this.numULCalibration + (this.numULReal > 0 ? 0 : 1))) * ULCalibrationPortion 
+    + DLCalibDone * DLCalibrationPortion 
+    + ULCalibDone * ULCalibrationPortion 
     + (this.numDLReal / AJAXOmeterNumDLsToRun) * DLRealPortion 
     + (this.numULReal / AJAXOmeterNumULsToRun) * ULRealPortion 
     ;
 } /* }}} */
+AJAXOmeter.prototype.snapshotProgress            = function (txt) { /* {{{ */
+  this.status = txt;
+  this.updateStats();
+
+  this.progressTriangle = this.progressTriangle.cloneNode(true);
+  this.svg.appendChild(this.progressTriangle);
+
+  this.progressText = this.progressText.cloneNode(true);
+  this.svg.appendChild(this.progressText);
+
+  this.status = "";
+
+} /* }}} */
+AJAXOmeter.prototype.getAvgLatency               = function () { /* {{{ */
+  return (this.latency_tot/this.latency_ct).toFixed(1)
+} /* }}} */
+AJAXOmeter.prototype.getAvgDLRate                = function () { /* {{{ */
+  return prettySize((this.downloaded*8)/this.downloaded_time) + "b/s";
+} /* }}} */
+AJAXOmeter.prototype.getAvgULRate                = function () { /* {{{ */
+  return prettySize((this.uploaded*8)/this.uploaded_time) + "b/s";
+} /* }}} */
+AJAXOmeter.prototype.getAvgDLbps                 = function () { /* {{{ */
+  return (this.downloaded*AJAXOmeterProtocolOverhead*8)/this.downloaded_time;
+} /* }}} */
+AJAXOmeter.prototype.getAvgULbps                 = function () { /* {{{ */
+  return (this.downloaded*AJAXOmeterProtocolOverhead*8)/this.downloaded_time;
+} /* }}} */
+AJAXOmeter.prototype.estimateLineType            = function () { /* {{{ */
+  var ubps          = this.getAvgULbps();
+  var dbps          = this.getAvgDLbps();
+  var minErr        = 99999;
+  var name          = "";
+  var errThreshold  = 1.1;
+
+  for (var i in AJAXOmeterLineTypes) {
+    var line = AJAXOmeterLineTypes[i];
+
+    if (ubps > line.up*errThreshold || dbps > line.down*errThreshold)
+      continue;
+
+
+    var err = Math.abs(1-line.up/ubps) + Math.abs(1-line.down/dbps);
+    if (err < minErr) { 
+      minErr = err;
+      name = line.name;
+    }
+  }
+
+  return name;
+} /* }}} */
+
+
 
 
 /** Utility Functions {{{ **/
@@ -487,7 +614,7 @@ function prettySize(size) { /* {{{ */
   } else if (size > 1024) {
      html += (size/1024).toFixed(1) + " K";
   } else {
-     html += size + " B";
+     html += size.toFixed(0) + " B";
   }
 
   return html;
@@ -508,7 +635,6 @@ function genStr(len) { /* {{{ */
 
 
 var _Objs = new Array(); /* for _(set|get|push)Obj */
-
 function setObj(id, o) { /* {{{ */
   _Objs[id] = o;
 } /* }}} */
@@ -520,6 +646,5 @@ function pushObj(o) { /* {{{ */
   _Objs.push(o);
   return _Objs.length-1;
 } /* }}} */
-
 
 /* }}} */
