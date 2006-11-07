@@ -25,9 +25,11 @@ var AJAXOmeterLineTypes = new Array(
      , {name: '7M ADSL'             , up:1000000     , down:7000000     } 
      , {name: 'High Speed Wireless' , up:7000000     , down:7000000     } 
      , {name: '10M Ethernet'        , up:10000000    , down:10000000    } 
-     , {name: 'T3'                  , up:45000000    , down:45000000    } 
+     , {name: 'T3'                  , up:44736000    , down:44736000    } 
+     , {name: 'OC1'                 , up:51800000    , down:51800000    } 
      , {name: '100M Ethernet'       , up:100000000   , down:100000000   } 
      , {name: 'OC3'                 , up:155000000   , down:155000000   } 
+     , {name: 'T4'                  , up:274760000   , down:274760000   } 
      , {name: 'OC12'                , up:622000000   , down:622000000   } 
      , {name: '1G Ethernet'         , up:1000000000  , down:1000000000  } 
      , {name: 'OC48'                , up:2500000000  , down:2500000000  } 
