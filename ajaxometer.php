@@ -1,4 +1,6 @@
 <?php
+/* Copyright (c) 2006, Lobo Internet Services, Ltd.  All rights reserved. */
+
 $ajaxometer_width  = 800;
 $ajaxometer_height = 600;
 

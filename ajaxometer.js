@@ -1,5 +1,7 @@
-/** Config **/
+/* Copyright (c) 2006, Lobo Internet Services, Ltd.  All rights reserved. */
 
+
+/** Config **/
 /* This controls how long a download should take. */
 var AJAXOmeterTestTime           = 1000; // in miliseconds (this will only be an aproximation)
 //var AJAXOmeterTestTime           = 10; // in miliseconds (this will only be an aproximation)
