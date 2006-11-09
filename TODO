@@ -1,0 +1,10 @@
+* Need to do more checking for svg capabilities and error out if such things
+  are not present (or better yet, have a fallback speed test... but,
+  whatever..)
+
+  Specifically: We need to do appropriate checks in Saffari, but seeing as how
+  I don't have access to a mac, I can't test, so until someone comes along and
+  wants to help contribute, mac users will need to figure out that they need
+  the adobe svg plugin on their own. (or use firefox or opera or something of the sort) 
+
+* Maybe need to add multi-lingual support. Anyone want to volunteer?
