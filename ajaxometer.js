@@ -404,7 +404,7 @@ AJAXOmeter.prototype.speedTest                   = function () { /* {{{ */
     self.uploaded_time   = 0;
     runULTest(AJAXOmeterNumDLsToRun, function () {
       runDLTest(AJAXOmeterNumULsToRun, function () { 
-        self.printResults("Speed Test Finnished.");
+        self.printResults("Speed Test Finished.");
         printSummary();
         self.updateStats();
       });
