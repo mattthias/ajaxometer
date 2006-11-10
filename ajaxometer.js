@@ -85,18 +85,23 @@ function AJAXOmeter(e) { /* {{{ */
   this.progressText           = null;
 
   
-  this.svgDocument = e.target.ownerDocument;
-  this.svg         = this.svgDocument.documentElement;
+  if (e) {
+    this.svgDocument            = e.target.ownerDocument;
+    this.svg                    = this.svgDocument.documentElement;
 
 
-  this.results_x              = parseInt(this.elt("results").getAttributeNS(null, "x")) + 20;
-  this.results_y              = parseInt(this.elt("results").getAttributeNS(null, "y")) + AJAXOmeterTerminalLineHeight;
-  this.summary_x              = parseInt(this.elt("summary").getAttributeNS(null, "x")) + 20;
-  this.summary_y              = parseInt(this.elt("summary").getAttributeNS(null, "y")) + AJAXOmeterTerminalLineHeight;
+    this.results_x              = parseInt(this.elt("results").getAttributeNS(null, "x")) + 20;
+    this.results_y              = parseInt(this.elt("results").getAttributeNS(null, "y")) + AJAXOmeterTerminalLineHeight;
+    this.summary_x              = parseInt(this.elt("summary").getAttributeNS(null, "x")) + 20;
+    this.summary_y              = parseInt(this.elt("summary").getAttributeNS(null, "y")) + AJAXOmeterTerminalLineHeight;
 
 
-  this.summaryStubText = this.newText("Running Tests...", {x:this.summary_x+230, y:this.summary_y+75} );
-  this.svg.appendChild(this.summaryStubText);
+    this.summaryStubText = this.newText("Running Tests...", {x:this.summary_x+230, y:this.summary_y+75} );
+    this.svg.appendChild(this.summaryStubText);
+  } else {
+    this.svg         = null;
+    this.svgDocument = null;
+  }
 
 
   this.updateStats();
@@ -104,6 +109,7 @@ function AJAXOmeter(e) { /* {{{ */
 } /* }}} */
 
 AJAXOmeter.prototype.newElt                      = function (type) { /* {{{ */
+  if (this.svg == null) return;
 /* Takes a variable number of arguments. 
  * The first argument should be a string of the type of dom object
  * you want to create. The second argument is an associative array
@@ -160,6 +166,8 @@ AJAXOmeter.prototype.newElt                      = function (type) { /* {{{ */
   return elt;
 } /* }}} */
 AJAXOmeter.prototype.newTextOnPath               = function (txt, path, config) { /* {{{ */
+  if (this.svg == null) return;
+
   var xlinkns = "http://www.w3.org/1999/xlink";
   this.path_id = this.path_id == undefined ? 0 : this.path_id+1;
 
@@ -178,12 +186,15 @@ AJAXOmeter.prototype.newTextOnPath               = function (txt, path, config) 
   return textNode;
 } /* }}} */
 AJAXOmeter.prototype.newText                     = function (txt, config) { /* {{{ */
+  if (this.svg == null) return;
+
   var data = this.svgDocument.createTextNode(txt);
 
   var textNode = this.newElt("text", config, data);
   return textNode;
 } /* }}} */
 AJAXOmeter.prototype.updateStats                 = function () { /* {{{ */
+  if (this.svg == null) return;
 
   if (this.progressCircle == null) {
     this.progressCircle = this.newElt("path", {'class':"progressCircle", "d":"M 800,400 A 200 200 0 0 1 800 400"});
@@ -250,6 +261,8 @@ AJAXOmeter.prototype.updateStats                 = function () { /* {{{ */
 
 } /* }}} */
 AJAXOmeter.prototype.elt                         = function (id) { /* {{{ */
+  if (this.svg == null) return null;
+
   return this.svgDocument.getElementById(id);
 } /* }}} */
 AJAXOmeter.prototype.ping                        = function (toCallWhenDone) { /* {{{ */
@@ -284,6 +297,7 @@ AJAXOmeter.prototype.downloadTest                = function (size, toCallWhenDon
     self.updateStats();
     if (toCallWhenDone) { toCallWhenDone(); }
   });
+
 } /* }}} */
 AJAXOmeter.prototype.uploadTest                  = function (size, toCallWhenDone) { /* {{{ */
   var self = this;
@@ -370,7 +384,7 @@ AJAXOmeter.prototype.speedTest                   = function () { /* {{{ */
           self.numDLReal++;
           runDLTest(ct-1, toCallWhenDone); });
     } else {
-      self.snapshotProgress("Download: ~" + self.getAvgDLRate());
+      self.snapshotProgress("Download: " + self.getAvgDLRate());
       self.printResults("Download Speed: " + self.getAvgDLRate());
       if (toCallWhenDone != null) toCallWhenDone();
     }
@@ -381,7 +395,7 @@ AJAXOmeter.prototype.speedTest                   = function () { /* {{{ */
           self.numULReal++;
           runULTest(ct-1, toCallWhenDone); });
     } else {
-      self.snapshotProgress("Upload: ~" + self.getAvgULRate());
+      self.snapshotProgress("Upload: " + self.getAvgULRate());
       self.printResults("Upload Speed: " + self.getAvgULRate());
       if (toCallWhenDone != null) toCallWhenDone();
     }
@@ -415,6 +429,8 @@ AJAXOmeter.prototype.speedTest                   = function () { /* {{{ */
 
 } /* }}} */
 AJAXOmeter.prototype.terminalPrint               = function (str, replaceLastLine) { /* {{{ */
+  if (this.svg == null) return;
+
   var line = this.newTextOnPath(str, "M0 200 L1200 200", {'class':'terminal'});
   this.svg.appendChild(line);
 
@@ -447,17 +463,25 @@ AJAXOmeter.prototype.terminalPrint               = function (str, replaceLastLin
 
 } /* }}} */
 AJAXOmeter.prototype.printResults                = function (str) { /* {{{ */
-  this.svg.appendChild(this.newText(str, {x:this.results_x, y:this.results_y}));
-  this.results_y += AJAXOmeterTerminalLineHeight;
+  if (this.svg == null) {
+    document.getElementById("AJAXOmeterPlainOutput").innerHTML += str + "<br>";
+  } else {
+    this.svg.appendChild(this.newText(str, {x:this.results_x, y:this.results_y}));
+    this.results_y += AJAXOmeterTerminalLineHeight;
+  }
 } /* }}} */
 AJAXOmeter.prototype.printSummary                = function (str) { /* {{{ */
-  if (this.summaryStubText != null) {
-    this.svg.removeChild(this.summaryStubText);
-    this.summaryStubText = null;
-  }
+  if (this.svg == null) {
+    document.getElementById("AJAXOmeterPlainOutput").innerHTML += str + "<br>";
+  } else {
+    if (this.summaryStubText != null) {
+      this.svg.removeChild(this.summaryStubText);
+      this.summaryStubText = null;
+    }
 
-  this.svg.appendChild(this.newText(str, {x:this.summary_x, y:this.summary_y}));
-  this.summary_y += AJAXOmeterTerminalLineHeight;
+    this.svg.appendChild(this.newText(str, {x:this.summary_x, y:this.summary_y}));
+    this.summary_y += AJAXOmeterTerminalLineHeight;
+  }
 } /* }}} */
 AJAXOmeter.prototype.percentDone                 = function () { /* {{{ */
   var PingsPortion              = 0.125;
@@ -488,6 +512,8 @@ AJAXOmeter.prototype.percentDone                 = function () { /* {{{ */
     ;
 } /* }}} */
 AJAXOmeter.prototype.snapshotProgress            = function (txt) { /* {{{ */
+  if (this.svg == null) return;
+
   this.status = txt;
   this.updateStats();
 
@@ -528,7 +554,6 @@ AJAXOmeter.prototype.estimateLineType            = function () { /* {{{ */
     if (ubps > line.up*errThreshold || dbps > line.down*errThreshold)
       continue;
 
-
     var err = Math.abs(1-line.up/ubps) + Math.abs(1-line.down/dbps);
     if (err < minErr) { 
       minErr = err;
@@ -544,47 +569,6 @@ AJAXOmeter.prototype.estimateLineType            = function () { /* {{{ */
 
 /** Utility Functions {{{ **/
 
-function pull(src, post, callback, opt_method) { /* {{{ */
-  if (src) {
-    var X = getHttpRequester();
-
-    if (X) {
-      X.open("POST", src,true);
-      X.onreadystatechange=function() {
-        if (X.readyState==4) {
-          if (opt_method != null) {
-            if (!callback[opt_method]) {
-              alert(opt_method + " was not found within class");
-            }
-
-            callback[opt_method]();
-          } else if (callback) {
-            callback();
-          } else {
-            eval();
-          }
-        } 
-      };
-      X.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-      X.send(post);
-    } else {
-      alert("pull called but the browser doesn't seem to support the XMLHttpRequest object.");
-    }
-  } else {
-    alert("pull called with an invalid source = null");
-  }
-} /* }}} */
-function isArray(obj) { /* {{{ */
-  return (obj &&
-      obj.splice &&
-      obj.reverse &&
-      obj.push &&
-      obj.pop &&
-      obj.sort &&
-      obj.slice &&
-      obj.shift &&
-      obj.unshift) ? true : false;
-} /* }}} */
 function getHttpRequester() { /* {{{ */
   var xmlhttp=false;
   /*@cc_on @*/
@@ -604,6 +588,60 @@ function getHttpRequester() { /* {{{ */
   }
 
   return xmlhttp;
+} /* }}} */
+function pull(src, post, callback, opt_method) { /* {{{ */
+  //try {
+    if (src) {
+    
+      var X = getHttpRequester();
+  
+      if (X) {
+        X.open("POST", src,true);
+        X.onreadystatechange=function() {
+          if (X.readyState==4) {
+            if (opt_method != null) {
+              if (!callback[opt_method]) {
+                alert(opt_method + " was not found within class");
+              }
+  
+              callback[opt_method]();
+            } else if (callback) {
+              callback();
+            } 
+          } 
+        };
+        X.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        X.send(post);
+      } else {
+        alert("pull called but the browser doesn't seem to support the XMLHttpRequest object.");
+      }
+    } else {
+      alert("pull called with an invalid source = null");
+    }
+    /*
+  } catch (e) {
+    if (opt_method != null) {
+      if (!callback[opt_method]) {
+        alert(opt_method + " was not found within class");
+      }
+
+      callback[opt_method]();
+    } else if (callback) {
+      callback();
+    } 
+  }
+  */
+} /* }}} */
+function isArray(obj) { /* {{{ */
+  return (obj &&
+      obj.splice &&
+      obj.reverse &&
+      obj.push &&
+      obj.pop &&
+      obj.sort &&
+      obj.slice &&
+      obj.shift &&
+      obj.unshift) ? true : false;
 } /* }}} */
 function prettySize(size) { /* {{{ */
   var html = "";
