@@ -165,26 +165,6 @@ AJAXOmeter.prototype.newElt                      = function (type) { /* {{{ */
   }
   return elt;
 } /* }}} */
-AJAXOmeter.prototype.newTextOnPath               = function (txt, path, config) { /* {{{ */
-  if (this.svg == null) return;
-
-  var xlinkns = "http://www.w3.org/1999/xlink";
-  this.path_id = this.path_id == undefined ? 0 : this.path_id+1;
-
-
-  var p = this.newElt("path", {'id':"textPath"+this.path_id, 'd':path});
-  var defs = this.newElt("defs", {'id':'defsPath'+this.path_id}, p);
-  this.svg.appendChild(defs);
-
-
-  var data = this.svgDocument.createTextNode(txt);
-
-  var textPath = this.newElt("textPath", {}, data);
-  textPath.setAttributeNS(xlinkns, "xlink:href", "#textPath" + this.path_id);
-
-  var textNode = this.newElt("text", config, textPath);
-  return textNode;
-} /* }}} */
 AJAXOmeter.prototype.newText                     = function (txt, config) { /* {{{ */
   if (this.svg == null) return;
 
@@ -430,17 +410,15 @@ AJAXOmeter.prototype.speedTest                   = function () { /* {{{ */
 } /* }}} */
 AJAXOmeter.prototype.terminalPrint               = function (str, replaceLastLine) { /* {{{ */
   if (this.svg == null) return;
-
-  var line = this.newTextOnPath(str, "M0 200 L1200 200", {'class':'terminal'});
+  var line = this.newText(str, {'class':'terminal', "x":10, "y":200});
   this.svg.appendChild(line);
 
   if (replaceLastLine) {
     var last = this.terminalBuffer.pop();
-    this.svg.removeChild(this.elt('defsPath'+last.pathId));
     this.svg.removeChild(last.line);
   }
 
-  this.terminalBuffer.push({'str':str, 'line':line, 'pathId':this.path_id});
+  this.terminalBuffer.push({'str':str, 'line':line});
   
   var ypos = AJAXOmeterTerminalLineHeight;
   for (var i=this.terminalBuffer.length-1; i >= 0; --i) {
@@ -448,19 +426,15 @@ AJAXOmeter.prototype.terminalPrint               = function (str, replaceLastLin
 
     if (ypos > AJAXOmeterViewHeight) {
       if (this.terminalBuffer[i].line != null) {
-        this.svg.removeChild(this.elt('defsPath'+this.terminalBuffer[i].pathId));
         this.svg.removeChild(this.terminalBuffer[i].line);
         this.terminalBuffer[i].line = null;
         break;
       }
     } else {
-      this.elt('textPath'+this.terminalBuffer[i].pathId).setAttributeNS(null, "d", 
-        "M10 " + ypos + " L" + AJAXOmeterViewWidth + " " + ypos);
+      this.terminalBuffer[i].line.setAttributeNS(null, "y", ypos);
     }
     ypos += AJAXOmeterTerminalLineHeight;
   }
-
-
 } /* }}} */
 AJAXOmeter.prototype.printResults                = function (str) { /* {{{ */
   if (this.svg == null) {
