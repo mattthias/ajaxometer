@@ -10,8 +10,8 @@
 ========
 
   AJAXOmeter is a web-based bandwidth testing utility implemented in PHP, SVG,
-  and Javascript. It tests http-request latency and tests upload and download
-  speeds to the web server. 
+  and JavaScript. It tests http-request latency and upload/download speeds to
+  the web server. 
 
   The AJAXOmeter project is released under a BSD style license, the license
   details are located in the LICENSE file you should have received with this
@@ -28,15 +28,15 @@
 2. Modifying & Embedding
 ========================
 
-  AJAXOmeter can be easily embedded inside another webpage by simply embedding
-  the svg document into your desired page. (See ajaxometer.php for an example).
-  The ajaxometer.php file is still required since the javascript code still
-  makes requests to the ajaxometer.php, but this way the user doesn't ever have
+  AJAXOmeter can be easily embedded inside another web page by simply embedding
+  the SVG document into your desired page. (See ajaxometer.php for an example).
+  The ajaxometer.php file is still required since the JavaScript code still
+  makes requests to ajaxometer.php, but this way the user doesn't ever have
   to see ajaxometer.php on their URL.
 
   The .js and .php files have some configuration options located at the top of
   the file you can tweak if you so desire. Other modifications will probably
-  require a fairly good understanding of SVG and Javascript. 
+  require a fairly good understanding of SVG and JavaScript. 
 
 
 3. Contributors
@@ -45,7 +45,7 @@
   Lobo Internet Services, Ltd. 
      * Has provided company time for the initial programmers to do AJAXOmeter 
 
-  Akita Bright-Holloway
+  Akita Bright-Holloway (akitabright@users.sourceforge.net)
      * Initial author
 
   Sheldon Jones
