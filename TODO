@@ -8,3 +8,7 @@
   the adobe svg plugin on their own. (or use firefox or opera or something of the sort) 
 
 * Maybe need to add multi-lingual support. Anyone want to volunteer?
+
+* Need to better handle outlying points for latency and download times 
+
+* Need to not ever accept a negative time for download and upload times ..
