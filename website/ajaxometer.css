@@ -1,0 +1,57 @@
+/* Copyright (c) 2006, Lobo Internet Services, Ltd.  All rights reserved. */
+
+text {
+  fill: gray;
+  font-family: "Trebuchet MS", Verdana, Arial, sans-serif;
+  font-size: 30px;
+  font-weight: bold;
+}
+
+text.terminal {
+  fill: #999;
+  font-size: 30px;
+  font-weight: bold;
+}
+
+text.status {
+  fill: #CF5542;
+  font-size: 50px;
+  font-weight: bold;
+}
+
+rect.background { fill: #ddd; }
+rect.ping       { fill: #afa; }
+rect.download   { fill: #faa; }
+rect.upload     { fill: #aaf; }
+
+text.ping     { fill: #F00; }
+text.download { fill: #000; }
+text.upload   { fill: #000; }
+
+path.progressCircle {
+  stroke-width: 20;
+  fill: none;
+  stroke-dasharray: 30, 9;
+  stroke: #666666;
+}
+
+.wolf{
+  fill: #8f352d;
+}
+
+.progressTriangle {
+  fill: #8f352d;
+}
+
+.progressText {
+  fill: #8f352d;
+}
+
+rect.results {
+  fill: #f6f6f6;
+  stroke-width: 8; 
+  stroke: black;
+
+}
+
+

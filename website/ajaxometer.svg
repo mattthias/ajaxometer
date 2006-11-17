@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+<?xml-stylesheet href="ajaxometer.css" type="text/css"?>
+<!-- Copyright (c) 2006, Lobo Internet Services, Ltd.  All rights reserved. -->
+
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 20010904//EN"
+"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
+<svg xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 1600 1200" preserveAspectRatio="none"
+  xmlns:xlink="http://www.w3.org/1999/xlink" onload='new AJAXOmeter(evt);'>
+
+  <rect x="0" y="0" width="1600" height="1200" class="background" />
+
+  <path
+    class="wolf"
+    id="wolf"
+    transform="scale(0.7, 0.8) translate(900,680)"
+    d=" M 105.53125,0 L 79.78125,14.4375 L 57.03125,17.59375 L 54.40625,33.59375 L 20.78125,40.53125 L 20.15625,49.875 L 36.21875,54.78125 L 60.71875,50.25 L 91.53125,63.09375 L 51.78125,72.28125 L 30.90625,85.71875 L 35.125,89.3125 L 18.28125,97.71875 L 0,114.28125 L 13.3125,115.96875 L 22.40625,110.90625 L 31.09375,104.59375 L 66.125,95.65625 L 157.21875,108.1875 L 188.3125,89.4375 L 276.1875,75.53125 L 316.59375,87.46875 L 377.625,98.15625 L 445.03125,117.25 L 479.375,124.5 L 465.9375,106.90625 L 451.625,104.3125 L 397.125,83.71875 L 392.0625,79.9375 L 436.53125,82.25 L 461.59375,89.53125 L 455.28125,73.6875 L 386.28125,54.3125 L 352.09375,47.84375 L 341.28125,31.9375 L 394.3125,37.78125 L 479.5625,5.84375 L 411.84375,9.4375 L 344.28125,15.0625 L 277.4375,20.25 L 217.03125,19.59375 L 157.5,19.25 L 100.3125,12.84375 L 105.53125,0 z " />
+
+  <rect class='results' id="summary" rx="20" ry="20" x="800" y="20" width="780" height="200" />
+  <rect class='results' id="results" rx="20" ry="20" x="1000" y="830" width="580" height="350" />
+
+  <script type="text/ecmascript" xlink:href="ajaxometer.js"></script>
+</svg>
