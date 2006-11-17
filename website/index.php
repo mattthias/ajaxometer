@@ -21,10 +21,13 @@
     <center>
     <h2>
       Sorry we havn't made a snazy looking website yet. If you want to see a demo, which I'm sure you do,
-    <h2>
+    </h2>
     <h1>
       <a href="ajaxometer/ajaxometer.php">click here for the demo</a>
-    <h1/>
+    </h1>
+     (Please note that the current implementation doesn't handle inconsistent results from heavily loaded
+web servers very well [servers like sourceforges] so you will probably see some strange numbers. We will hopefully be
+addressing this eventually, but it is also not really a problem if your web server isn't heavily loaded..)
     <br/>
     <br/>
     <br/>
