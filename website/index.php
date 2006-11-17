@@ -42,6 +42,6 @@ addressing this eventually, but it is also not really a problem if your web serv
     <br/><br/>
     <br/><br/>
     <a href="http://sourceforge.net"><img class='sf_logo' src="http://sflogo.sourceforge.net/sflogo.php?group_id=166297&amp;type=2" width="125" height="37" border="0" alt="SourceForge.net Logo" /></a> 
-    <a href="http://lobo.net"><img class='lobo_logo' src="lobo_logo.gif" width="125" height="37" border="0" alt="Lobo.net Logo" /></a> 
+    <a href="http://lobo.net"><img class='lobo_logo' src="125-lobo-logo.gif" width="125" height="37" border="0" alt="Lobo.net Logo" /></a> 
   </body>
 </html>
