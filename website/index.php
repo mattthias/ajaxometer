@@ -23,7 +23,7 @@
       Sorry we havn't made a snazy looking website yet. If you want to see a demo, which I'm sure you do,
     <h2>
     <h1>
-      <a href="ajaxometer.php">click here for the demo</a>
+      <a href="ajaxometer/ajaxometer.php">click here for the demo</a>
     <h1/>
     <br/>
     <br/>
