@@ -1,7 +1,5 @@
 [2006-11-20] Akita 
-  Fix to attempt to compensate for spontaneous random server lag in the
-  calibration phase that will cause the system to think its done calibrating
-  before it really is.
+  Put in some basic compensation for spiky servers.
 
 [2006-11-20] Akita 
   Fixed rate display so it doesn't show Bb/s when we get a crazy slow rating.
