@@ -59,13 +59,11 @@ else
 /** Code **/
 function AJAXOmeter(e) { /* {{{ */
   var self = this;
-  this.objId = pushObj(this);
   
   this.status                 = "";
-  this.latency_tot            = 0;
-  this.latency_ct             = 0;
-  this.uploaded               = 0;
-  this.uploaded_time          = 0; // in seconds, minus the avg latency.
+  this.latency                = new Array();
+  this.downbps                = new Array();
+  this.upbps                  = new Array();
   this.lastRunTime            = 0;
   this.goodDLSize             = 0;
   this.goodULSize             = 0;
@@ -253,8 +251,7 @@ AJAXOmeter.prototype.ping                        = function (toCallWhenDone) { /
   pull("ajaxometer.php?len=1", "", function () {
     var end = new Date();
     var latency = end.getTime() - start.getTime();
-    self.latency_tot += latency;
-    self.latency_ct  += 1;
+    self.latency.push(latency);
     self.lastRunTime  = latency;
     self.updateStats();
     self.terminalPrint("ping() -> " + latency + " ms", true);
@@ -271,8 +268,7 @@ AJAXOmeter.prototype.downloadTest                = function (size, toCallWhenDon
     var end = new Date();
     self.lastRunTime = end.getTime() - start.getTime();
     var downloadTime = (self.lastRunTime - self.getAvgLatency()) * 0.001;
-    self.downloaded      += size;
-    self.downloaded_time += downloadTime;
+    self.downbps.push(size/downloadTime);
     self.terminalPrint("download("+prettySize(size)+") -> " + self.lastRunTime + " ms", true);
     self.updateStats();
     if (toCallWhenDone) { toCallWhenDone(); }
@@ -290,8 +286,7 @@ AJAXOmeter.prototype.uploadTest                  = function (size, toCallWhenDon
     var end = new Date();
     self.lastRunTime = end.getTime() - start.getTime();
     var uploadTime = (self.lastRunTime - self.getAvgLatency()) * 0.001;
-    self.uploaded      += size;
-    self.uploaded_time += uploadTime;
+    self.upbps.push(size/uploadTime);
     self.terminalPrint("upload("+prettySize(size)+") -> " + self.lastRunTime + " ms", true);
     self.updateStats();
     if (toCallWhenDone) { toCallWhenDone(); }
@@ -301,7 +296,7 @@ AJAXOmeter.prototype.calibrate                   = function (toCallWhenDone) { /
   var self = this;
   var total_dl_calib = 0;
   var total_ul_calib = 0;
-  var calibration_slack = 0.92;
+  var calibration_slack = 0.92; /* seems like a good magic number? */
 
   function runPingTest(ct, toCallWhenDone) {
     if (ct > 0) {
@@ -392,10 +387,8 @@ AJAXOmeter.prototype.speedTest                   = function () { /* {{{ */
   }
 
   function RunSpeedTests () {
-    self.downloaded      = 0;
-    self.downloaded_time = 0;
-    self.uploaded        = 0;
-    self.uploaded_time   = 0;
+    self.upbps   = new Array();
+    self.downbps = new Array();
     runULTest(AJAXOmeterNumDLsToRun, function () {
       runDLTest(AJAXOmeterNumULsToRun, function () { 
         self.printResults("Speed Test Finished.");
@@ -501,19 +494,24 @@ AJAXOmeter.prototype.snapshotProgress            = function (txt) { /* {{{ */
 
 } /* }}} */
 AJAXOmeter.prototype.getAvgLatency               = function () { /* {{{ */
-  return (this.latency_tot/this.latency_ct).toFixed(1)
+  this.latency.filterMin();
+  return (this.latency.sum()/this.latency.length).toFixed(1);
 } /* }}} */
 AJAXOmeter.prototype.getAvgDLRate                = function () { /* {{{ */
-  return prettyRate((this.downloaded*8)/this.downloaded_time);
+  this.downbps.filterMax();
+  return prettyRate(this.downbps.avg()*8);
 } /* }}} */
 AJAXOmeter.prototype.getAvgULRate                = function () { /* {{{ */
-  return prettyRate((this.uploaded*8)/this.uploaded_time);
+  this.upbps.filterMax();
+  return prettyRate(this.upbps.avg()*8);
 } /* }}} */
 AJAXOmeter.prototype.getAvgDLbps                 = function () { /* {{{ */
-  return (this.downloaded*AJAXOmeterProtocolOverhead*8)/this.downloaded_time;
+  this.upbps.filterMax();
+  return this.downbps.avg()*8*AJAXOmeterProtocolOverhead;
 } /* }}} */
 AJAXOmeter.prototype.getAvgULbps                 = function () { /* {{{ */
-  return (this.downloaded*AJAXOmeterProtocolOverhead*8)/this.downloaded_time;
+  this.upbps.filterMax();
+  return this.upbps.avg()*8*AJAXOmeterProtocolOverhead;
 } /* }}} */
 AJAXOmeter.prototype.estimateLineType            = function () { /* {{{ */
   var ubps          = this.getAvgULbps();
@@ -537,7 +535,6 @@ AJAXOmeter.prototype.estimateLineType            = function () { /* {{{ */
 
   return name;
 } /* }}} */
-
 
 
 
@@ -654,18 +651,36 @@ function genStr(len) { /* {{{ */
   }
 } /* }}} */
 
-
-var _Objs = new Array(); /* for _(set|get|push)Obj */
-function setObj(id, o) { /* {{{ */
-  _Objs[id] = o;
+Array.prototype.sum                              = function() { /* {{{ */
+	for(var i=0,sum=0;i<this.length;sum+=this[i++]);
+	return sum;
 } /* }}} */
-function getObj(id) { /* {{{ */
-  if (id == null) return null;
-  return _Objs[id];
+Array.prototype.filterMin                        = function() { /* {{{ */
+  var min = this.min();
+  for (var i=0; i < this.length; ++i) {
+    if (this[i] > (min*2)) {
+      this.splice(i, 1);
+      i-=1;
+    }
+  }
 } /* }}} */
-function pushObj(o) { /* {{{ */
-  _Objs.push(o);
-  return _Objs.length-1;
+Array.prototype.filterMax                        = function() { /* {{{ */
+  var max = this.max();
+  for (var i=0; i < this.length; ++i) {
+    if (this[i] < (max/2)) {
+      this.splice(i, 1);
+      i-=1;
+    }
+  }
+} /* }}} */
+Array.prototype.avg                              = function(){ /* {{{ */
+  return this.sum()/this.length;
+} /* }}} */
+Array.prototype.min                              = function(){ /* {{{ */
+	return Math.min.apply({},this)
+} /* }}} */
+Array.prototype.max                              = function(){ /* {{{ */
+	return Math.max.apply({},this)
 } /* }}} */
 
 /* }}} */
