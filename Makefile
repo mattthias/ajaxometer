@@ -1,4 +1,4 @@
-VERSION=0.9
+VERSION=0.9.2
 NAME=AJAXOmeter
 FILES=LICENSE README ChangeLog ajaxometer.js ajaxometer.php ajaxometer.svg ajaxometer.css
 
