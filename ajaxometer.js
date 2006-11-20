@@ -4,7 +4,7 @@
 /** Config **/
 /* This controls how long a download should take. */
 var AJAXOmeterTestTime           = 1000; // in miliseconds (this will only be an aproximation)
-//var AJAXOmeterTestTime           = 10; // in miliseconds (this will only be an aproximation)
+//var AJAXOmeterTestTime           = 300; // in miliseconds (this will only be an aproximation)
 var AJAXOmeterViewWidth          = 1600; // you need to change this in the .svg file as well.
 var AJAXOmeterViewHeight         = 1200; // you need to change htis in the .svg file as well.
 var AJAXOmeterTerminalLineHeight = 40;
@@ -316,7 +316,8 @@ AJAXOmeter.prototype.calibrate                   = function (toCallWhenDone) { /
 
   function runDownloadTest(size, toCallWhenDone) {
     self.totalDLCalibrationTime += self.lastRunTime;
-    if (self.lastRunTime < AJAXOmeterTestTime * calibration_slack) {
+    if ((self.lastRunTime < AJAXOmeterTestTime * calibration_slack) ||
+        (self.lastRunTime > (AJAXOmeterTestTime*2))) {
       if (self.lastRunTime*2 > AJAXOmeterTestTime) 
         size *= (AJAXOmeterTestTime/self.lastRunTime)*0.6;
       self.numDLCalibration++;
@@ -324,14 +325,16 @@ AJAXOmeter.prototype.calibrate                   = function (toCallWhenDone) { /
     } else {
       self.goodDLSize = size * .5 * (AJAXOmeterTestTime/self.lastRunTime); 
       self.terminalPrint("DL Size Calibrated: " + prettySize(self.goodDLSize));
-      self.printResults("Test Download Size: " + prettySize(self.goodDLSize) + "B");
+      self.printResults("Test Download Size: " + prettySize(self.goodDLSize));
       if (toCallWhenDone != null) toCallWhenDone();
     }
   }
 
   function runUploadTest(size, toCallWhenDone) {
     self.totalULCalibrationTime += self.lastRunTime;
-    if (self.lastRunTime < AJAXOmeterTestTime * calibration_slack) {
+    //if (self.lastRunTime < AJAXOmeterTestTime * calibration_slack) {
+    if ((self.lastRunTime < AJAXOmeterTestTime * calibration_slack) ||
+        (self.lastRunTime > (AJAXOmeterTestTime*2))) {
       if (self.lastRunTime*2 > AJAXOmeterTestTime) 
         size *= (AJAXOmeterTestTime/self.lastRunTime)*0.6; 
       self.numULCalibration++;
@@ -339,7 +342,7 @@ AJAXOmeter.prototype.calibrate                   = function (toCallWhenDone) { /
     } else {
       self.goodULSize = size * .5 * (AJAXOmeterTestTime/self.lastRunTime); 
       self.terminalPrint("UL Size Calibrated: " + prettySize(self.goodULSize));
-      self.printResults("Test Upload Size: " + prettySize(self.goodULSize) + "B");
+      self.printResults("Test Upload Size: " + prettySize(self.goodULSize));
       self.snapshotProgress("Calibration Done");
       if (toCallWhenDone != null) toCallWhenDone();
     }
@@ -384,9 +387,6 @@ AJAXOmeter.prototype.speedTest                   = function () { /* {{{ */
   function printSummary() {
     self.printSummary("Estimated Line Type: " + self.estimateLineType());
     self.printSummary("( ~" + (self.getAvgDLbps()/AJAXOmeterAvgModemSpeed).toFixed(1) + " x faster than avg. modem speeds)");
-    /*
-    self.printSummary("  faster than a 56k modem");
-    */
     self.printSummary("Time to load an average web page: ~" + ((AJAXOmeterAvgWebPageSize*8)/self.getAvgDLbps()).toFixed(2) + " s");
     self.printSummary("Time to download 10MB file: ~" + ((10000000*8)/self.getAvgDLbps()).toFixed(0) + " s");
   }
@@ -504,10 +504,10 @@ AJAXOmeter.prototype.getAvgLatency               = function () { /* {{{ */
   return (this.latency_tot/this.latency_ct).toFixed(1)
 } /* }}} */
 AJAXOmeter.prototype.getAvgDLRate                = function () { /* {{{ */
-  return prettySize((this.downloaded*8)/this.downloaded_time) + "b/s";
+  return prettyRate((this.downloaded*8)/this.downloaded_time);
 } /* }}} */
 AJAXOmeter.prototype.getAvgULRate                = function () { /* {{{ */
-  return prettySize((this.uploaded*8)/this.uploaded_time) + "b/s";
+  return prettyRate((this.uploaded*8)/this.uploaded_time);
 } /* }}} */
 AJAXOmeter.prototype.getAvgDLbps                 = function () { /* {{{ */
   return (this.downloaded*AJAXOmeterProtocolOverhead*8)/this.downloaded_time;
@@ -624,16 +624,21 @@ function prettySize(size) { /* {{{ */
     size = parseFloat(size);
   }
   if (size > 1073741824) {
-     html += (size/1073741824).toFixed(1) + " G";
+     html += (size/1073741824).toFixed(1) + " GB";
   } else if (size > 1048576) {
-     html += (size/1048576).toFixed(1) + " M";
+     html += (size/1048576).toFixed(1) + " MB";
   } else if (size > 1024) {
-     html += (size/1024).toFixed(1) + " K";
+     html += (size/1024).toFixed(1) + " KB";
   } else {
      html += size.toFixed(0) + " B";
   }
 
   return html;
+} /* }}} */
+function prettyRate(bps) { /* {{{ */
+  var rate = prettySize(bps);
+  rate = rate.substring(0,rate.length-1) + 'b/s';
+  return rate;
 } /* }}} */
 function genStr(len) { /* {{{ */
   var ret = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
