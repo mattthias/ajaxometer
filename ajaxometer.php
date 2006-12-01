@@ -75,6 +75,7 @@ if (hasSVGSupport) {
   Opera (<a href="http://www.opera.com/">http://www.opera.com/</a>).
 </noscript>
 
+<!-- End Paste -->
 
 
 
