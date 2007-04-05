@@ -3,40 +3,52 @@
 
 /** Config **/
 /* This controls how long a download should take. */
-var AJAXOmeterTestTime           = 1000; // in miliseconds (this will only be an aproximation)
-//var AJAXOmeterTestTime           = 300; // in miliseconds (this will only be an aproximation)
-var AJAXOmeterViewWidth          = 1600; // you need to change this in the .svg file as well.
-var AJAXOmeterViewHeight         = 1200; // you need to change htis in the .svg file as well.
-var AJAXOmeterTerminalLineHeight = 40;
-var AJAXOmeterNumPingsToRun      = 15;
-var AJAXOmeterNumDLsToRun        = 5;
-var AJAXOmeterNumULsToRun        = 5;
-var AJAXOmeterAvgModemSpeed      = 28800;
-var AJAXOmeterAvgWebPageSize     = 130000;
-var AJAXOmeterProtocolOverhead   = 1.08; // +8% or there abouts ... 
+var AJAXOmeterTestTime            = 1000; // in miliseconds (this will only be an aproximation)
+var AJAXOmeterViewWidth           = 1600; // you need to change this in the .svg file as well.
+var AJAXOmeterViewHeight          = 1200; // you need to change htis in the .svg file as well.
+var AJAXOmeterTerminalLineHeight  = 40;
+var AJAXOmeterNumPingsToRun       = 15;
+var AJAXOmeterNumDLsToRun         = 5;
+var AJAXOmeterNumULsToRun         = 5;
+var AJAXOmeterAvgModemSpeed       = 28800;
+var AJAXOmeterAvgWebPageSize      = 130000;
+var AJAXOmeterProtocolOverhead    = 1.08; // +8% or there abouts ... 
+var AJAXOmeterCalibrationSlack    = 0.86; /* seems like a good magic number?  Decrease this if you are
+                                           * on a jittery network or running at high speeds (>=Gb networks). */
+var AJAXOmeterInitialDownloadSize = 1024; /* bytes */
+var AJAXOmeterInitialUploadSize   = 1024; /* bytes */
+var AJAXOmeterMaxCalibrationSteps = 20;   /* In most cases we don't need this many and will exit before this, but when 
+                                           * we have a lot of jitter we need to limit our selves so we don't attemp to
+                                           * sit there and calibrate in a sea of chaos network chaos... */
+var AJAXOmeterMinCalibrationSteps = 4;    /* Always calibrate a little bit .. */
+var AJAXOmeterMaxUploadSize       = 67108864;  /* 64 MB*/
+var AJAXOmeterMaxDownloadSize     = 67108864;  /* 64 MB. Be sure to set this in ajaxometer.php too. */
+
+
+
 
 // all measurements in bits
 var AJAXOmeterLineTypes = new Array(
-       {name: '14.4k Modem'         , up:14400       , down:14400       } 
-     , {name: '28.8k Modem'         , up:28800       , down:28800       } 
-     , {name: '56k Modem'           , up:56000       , down:56200       } 
-     , {name: '1.5M ADSL'           , up:512000      , down:1500000     } 
-     , {name: 'T1'                  , up:1544000     , down:1544000     } 
-     , {name: 'E1'                  , up:2048000     , down:2048000     } 
-     , {name: 'Dual T1'             , up:3088000     , down:3088000     } 
-     , {name: '7M ADSL'             , up:1000000     , down:7000000     } 
-     , {name: 'High Speed Wireless' , up:7000000     , down:7000000     } 
-     , {name: '10M Ethernet'        , up:10000000    , down:10000000    } 
-     , {name: 'T3'                  , up:44736000    , down:44736000    } 
-     , {name: 'OC1'                 , up:51800000    , down:51800000    } 
-     , {name: '100M Ethernet'       , up:100000000   , down:100000000   } 
-     , {name: 'OC3'                 , up:155000000   , down:155000000   } 
-     , {name: 'T4'                  , up:274760000   , down:274760000   } 
-     , {name: 'OC12'                , up:622000000   , down:622000000   } 
-     , {name: '1G Ethernet'         , up:1000000000  , down:1000000000  } 
-     , {name: 'OC48'                , up:2500000000  , down:2500000000  } 
-     , {name: 'OC192'               , up:9600000000  , down:9600000000  } 
-     , {name: '10G Ethernet'        , up:10000000000 , down:10000000000 } 
+       {name: '14.4k Modem'         , up:14400.0       , down:14400.0       } 
+     , {name: '28.8k Modem'         , up:28800.0       , down:28800.0       } 
+     , {name: '56k Modem'           , up:56000.0       , down:56200.0       } 
+     , {name: '1.5M ADSL'           , up:512000.0      , down:1500000.0     } 
+     , {name: 'T1'                  , up:1544000.0     , down:1544000.0     } 
+     , {name: 'E1'                  , up:2048000.0     , down:2048000.0     } 
+     , {name: 'Dual T1'             , up:3088000.0     , down:3088000.0     } 
+     , {name: '7M ADSL'             , up:1000000.0     , down:7000000.0     } 
+     , {name: 'High Speed Wireless' , up:7000000.0     , down:7000000.0     } 
+     , {name: '10M Ethernet'        , up:10000000.0    , down:10000000.0    } 
+     , {name: 'T3'                  , up:44736000.0    , down:44736000.0    } 
+     , {name: 'OC1'                 , up:51800000.0    , down:51800000.0    } 
+     , {name: '100M Ethernet'       , up:100000000.0   , down:100000000.0   } 
+     , {name: 'OC3'                 , up:155000000.0   , down:155000000.0   } 
+     , {name: 'T4'                  , up:274760000.0   , down:274760000.0   } 
+     , {name: 'OC12'                , up:622000000.0   , down:622000000.0   } 
+     , {name: '1G Ethernet'         , up:1000000000.0  , down:1000000000.0  } 
+     , {name: 'OC48'                , up:2500000000.0  , down:2500000000.0  } 
+     , {name: 'OC192'               , up:9600000000.0  , down:9600000000.0  } 
+     , {name: '10G Ethernet'        , up:10000000000.0 , down:10000000000.0 } 
   );
 
 
@@ -245,9 +257,9 @@ AJAXOmeter.prototype.elt                         = function (id) { /* {{{ */
 } /* }}} */
 AJAXOmeter.prototype.ping                        = function (toCallWhenDone) { /* {{{ */
   var self = this;
-  var start = new Date();
   self.terminalPrint("ping() -> ");
 
+  var start = new Date();
   pull("ajaxometer.php?len=1", "", function () {
     var end = new Date();
     var latency = end.getTime() - start.getTime();
@@ -277,12 +289,15 @@ AJAXOmeter.prototype.downloadTest                = function (size, toCallWhenDon
 } /* }}} */
 AJAXOmeter.prototype.uploadTest                  = function (size, toCallWhenDone) { /* {{{ */
   var self = this;
-  var data = genStr(size);
+
+  if (this.data_size == null || this.data_size != size)
+    this.data = "data="+genStr(size); /* When we kick it into high gear on fast networks, lets not eat up all our ram. */
+  this.data_size = size;
 
   self.terminalPrint("upload("+prettySize(size)+") -> ");
 
   var start = new Date();
-  pull("ajaxometer.php","data="+data, function () {
+  pull("ajaxometer.php", this.data, function () {
     var end = new Date();
     self.lastRunTime = end.getTime() - start.getTime();
     var uploadTime = (self.lastRunTime - self.getAvgLatency()) * 0.001;
@@ -296,7 +311,6 @@ AJAXOmeter.prototype.calibrate                   = function (toCallWhenDone) { /
   var self = this;
   var total_dl_calib = 0;
   var total_ul_calib = 0;
-  var calibration_slack = 0.92; /* seems like a good magic number? */
 
   function runPingTest(ct, toCallWhenDone) {
     if (ct > 0) {
@@ -311,14 +325,28 @@ AJAXOmeter.prototype.calibrate                   = function (toCallWhenDone) { /
 
   function runDownloadTest(size, toCallWhenDone) {
     self.totalDLCalibrationTime += self.lastRunTime;
-    if ((self.lastRunTime < AJAXOmeterTestTime * calibration_slack) ||
-        (self.lastRunTime > (AJAXOmeterTestTime*2))) {
+    if (self.numDLCalibration < AJAXOmeterMinCalibrationSteps ||
+        (self.numDLCalibration < AJAXOmeterMaxCalibrationSteps &&
+         ((self.lastRunTime < AJAXOmeterTestTime * AJAXOmeterCalibrationSlack) ||
+          (self.lastRunTime > (AJAXOmeterTestTime*2))))) 
+    {
+      var oldSize = size;
       if (self.lastRunTime*2 > AJAXOmeterTestTime) 
         size *= (AJAXOmeterTestTime/self.lastRunTime)*0.6;
+      if (size == Infinity) {
+        size = oldSize;
+        self.numDLCalibration = AJAXOmeterMaxCalibrationSteps;
+      } else if (size > AJAXOmeterMaxDownloadSize) {
+        size = AJAXOmeterMaxDownloadSize/2;
+        self.numDLCalibration = AJAXOmeterMaxCalibrationSteps;
+      }
       self.numDLCalibration++;
       self.downloadTest(size, function () { runDownloadTest(size*2, toCallWhenDone); });
     } else {
       self.goodDLSize = size * .5 * (AJAXOmeterTestTime/self.lastRunTime); 
+      if (self.goodDLSize > AJAXOmeterMaxDownloadSize) {
+        self.goodDLSize = AJAXOmeterMaxDownloadSize;
+      }
       self.terminalPrint("DL Size Calibrated: " + prettySize(self.goodDLSize));
       self.printResults("Test Download Size: " + prettySize(self.goodDLSize));
       if (toCallWhenDone != null) toCallWhenDone();
@@ -327,15 +355,29 @@ AJAXOmeter.prototype.calibrate                   = function (toCallWhenDone) { /
 
   function runUploadTest(size, toCallWhenDone) {
     self.totalULCalibrationTime += self.lastRunTime;
-    //if (self.lastRunTime < AJAXOmeterTestTime * calibration_slack) {
-    if ((self.lastRunTime < AJAXOmeterTestTime * calibration_slack) ||
-        (self.lastRunTime > (AJAXOmeterTestTime*2))) {
+    //if (self.lastRunTime < AJAXOmeterTestTime * AJAXOmeterCalibrationSlack) {
+    if (self.numULCalibration < AJAXOmeterMinCalibrationSteps ||
+        (self.numULCalibration < AJAXOmeterMaxCalibrationSteps &&
+         ((self.lastRunTime < AJAXOmeterTestTime * AJAXOmeterCalibrationSlack) ||
+          (self.lastRunTime > (AJAXOmeterTestTime*2))))) 
+    {
+      var oldSize = size;
       if (self.lastRunTime*2 > AJAXOmeterTestTime) 
         size *= (AJAXOmeterTestTime/self.lastRunTime)*0.6; 
+      if (size == Infinity) {
+        size = oldSize;
+        self.numULCalibration = AJAXOmeterMaxCalibrationSteps;
+      } else if (size > AJAXOmeterMaxUploadSize) {
+        size = AJAXOmeterMaxUploadSize/2;
+        self.numULCalibration = AJAXOmeterMaxCalibrationSteps;
+      }
       self.numULCalibration++;
       self.uploadTest(size, function () { runUploadTest(size*2, toCallWhenDone); });
     } else {
       self.goodULSize = size * .5 * (AJAXOmeterTestTime/self.lastRunTime); 
+      if (self.goodULSize > AJAXOmeterMaxUploadSize) {
+        self.goodULSize = AJAXOmeterMaxUploadSize;
+      }
       self.terminalPrint("UL Size Calibrated: " + prettySize(self.goodULSize));
       self.printResults("Test Upload Size: " + prettySize(self.goodULSize));
       self.snapshotProgress("Calibration Done");
@@ -346,9 +388,9 @@ AJAXOmeter.prototype.calibrate                   = function (toCallWhenDone) { /
 
   runPingTest(AJAXOmeterNumPingsToRun, function () { 
     self.lastRunTime = 0;
-    runDownloadTest(1024, function () {
+    runDownloadTest(AJAXOmeterInitialDownloadSize, function () {
       self.lastRunTime = 0;
-      runUploadTest(1024, toCallWhenDone);
+      runUploadTest(AJAXOmeterInitialUploadSize, toCallWhenDone);
     }); 
   });
 } /* }}} */

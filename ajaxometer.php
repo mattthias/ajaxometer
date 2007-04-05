@@ -4,7 +4,23 @@
 $ajaxometer_width  = 800;
 $ajaxometer_height = 600;
 
-if (isset($_REQUEST['len']))  { die(str_repeat("x", $_REQUEST['len'])); }
+$max_download_size = 67108864; /* 64MB. */
+
+
+if (isset($_REQUEST['len']))  { 
+  $v = intval($_REQUEST['len']);
+  if ($v > $max_download_size) $v = $max_download_size;
+
+  if ($v < 64000) 
+    die(str_repeat("x", $v)); 
+
+  $d = str_repeat("x", 64000);
+  for (; $v >= 0; $v-=64000) {
+    echo $d;
+  }
+  die(str_repeat("x", 64000+$v));
+  //die(str_repeat("x", $_REQUEST['len']));  /* for big requests lets start spraying it out in chunks so we don't kill our server. */
+}
 if (isset($_REQUEST['data'])) { die ("null"); }
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
