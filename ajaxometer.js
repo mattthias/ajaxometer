@@ -4,8 +4,6 @@
 /** Config **/
 /* This controls how long a download should take. */
 var AJAXOmeterTestTime            = 1000; // in miliseconds (this will only be an aproximation)
-var AJAXOmeterViewWidth           = 1600; // you need to change this in the .svg file as well.
-var AJAXOmeterViewHeight          = 1200; // you need to change htis in the .svg file as well.
 var AJAXOmeterTerminalLineHeight  = 40;
 var AJAXOmeterNumPingsToRun       = 15;
 var AJAXOmeterNumDLsToRun         = 5;
@@ -15,15 +13,19 @@ var AJAXOmeterAvgWebPageSize      = 130000;
 var AJAXOmeterProtocolOverhead    = 1.08; // +8% or there abouts ... 
 var AJAXOmeterCalibrationSlack    = 0.86; /* seems like a good magic number?  Decrease this if you are
                                            * on a jittery network or running at high speeds (>=Gb networks). */
-var AJAXOmeterInitialDownloadSize = 1024; /* bytes */
-var AJAXOmeterInitialUploadSize   = 1024; /* bytes */
+var AJAXOmeterInitialDownloadSize = 4096; /* bytes */
+var AJAXOmeterInitialUploadSize   = 4096; /* bytes */
 var AJAXOmeterMaxCalibrationSteps = 20;   /* In most cases we don't need this many and will exit before this, but when 
                                            * we have a lot of jitter we need to limit our selves so we don't attemp to
                                            * sit there and calibrate in a sea of chaos network chaos... */
 var AJAXOmeterMinCalibrationSteps = 4;    /* Always calibrate a little bit .. */
-var AJAXOmeterMaxUploadSize       = 67108864;  /* 64 MB*/
+var AJAXOmeterMaxUploadSize       = 8388000;   /* 8 MB. This is the default post size limit for 
+                                                * most server setups, so more than this is useless. */
 var AJAXOmeterMaxDownloadSize     = 67108864;  /* 64 MB. Be sure to set this in ajaxometer.php too. */
 
+/* Only change these if you are messing with the .svg file. */
+var AJAXOmeterViewWidth           = 1600; // you need to change this in the .svg file as well.
+var AJAXOmeterViewHeight          = 1200; // you need to change htis in the .svg file as well.
 
 
 
@@ -679,18 +681,29 @@ function prettyRate(bps) { /* {{{ */
   rate = rate.substring(0,rate.length-1) + 'b/s';
   return rate;
 } /* }}} */
+var n_genStr = 0;
 function genStr(len) { /* {{{ */
-  var ret = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+    n_genStr = (n_genStr+1)%10;
+    var ret = n_genStr+"";
 
-  while (1) {
-    if (ret.length > len) {
-      return ret.substr(0, len);
+    while (1) {
+      if (ret.length > len) {
+        return ret.substr(0, len);
+      }
+      if (ret.length*2 >= len) {
+        return ret+ret.substr(0, len-ret.length);
+      }
+      ret += ret;
     }
-    if (ret.length*2 >= len) {
-      return ret+ret.substr(0, len-ret.length);
-    }
-    ret += ret;
-  }
+
+  /* IE has issues creating 'big' arrays, so we need to work around it .. and not do something like this :( */
+  /* 
+    n_genStr = (n_genStr+1)%10;
+    var seg_size = parseInt((parseInt(len+"")/100)+"");
+    var rem_size = parseInt((parseInt(len+"")%100)+"");
+
+    return new Array(100).join(new Array(seg_size).join(n_genStr+""))+new Array(rem_size).join(n_genStr);
+  */
 } /* }}} */
 
 Array.prototype.sum                              = function() { /* {{{ */
