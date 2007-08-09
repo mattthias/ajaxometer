@@ -20,7 +20,10 @@ var AJAXOmeterMaxCalibrationSteps = 20;        /* In most cases we don't need th
                                                 * sit there and calibrate in a sea of chaos network chaos... */
 var AJAXOmeterMinCalibrationSteps = 4;         /* Always calibrate a little bit .. */
 var AJAXOmeterMaxUploadSize       = 8388000;   /* 8 MB. This is the default post size limit for 
-                                                * most server setups, so more than this is useless. */
+                                                * most server setups, so more than this is useless. 
+                                                * Note: Opera browsers don't seem to let JS allocate 8MB, so
+                                                *       in the browser detection code this is again capped to
+                                                *       3.5 MB, if you don't it lower here.  */
 var AJAXOmeterMaxDownloadSize     = 67108864;  /* 64 MB. Be sure to set this in ajaxometer.php too. */
 
 /* Only change these if you are messing with the .svg file. */
@@ -58,8 +61,11 @@ var AJAXOmeterLineTypes = new Array(
 
 /** Browser Detection **/
 var AJAXOmeterBrowser = "";
-if (/Opera/.test(navigator.userAgent)) 
+if (/Opera/.test(navigator.userAgent)) {
   AJAXOmeterBrowser="opera";
+  if (AJAXOmeterMaxUploadSize > 3670016) 
+    AJAXOmeterMaxUploadSize = 3670016.0;   /* 3.5 MB. limit Opera doesn't like to let JS have much memory I guess */
+}
 else if (/Microsoft Internet Explorer/.test(navigator.appName))
   AJAXOmeterBrowser="ie";
 else if (/Adobe/.test(navigator.appName)) // We can also be in the Adobe SVG Viewer ... its probably not really correct to assume ie, but oh well. 

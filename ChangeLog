@@ -2,6 +2,8 @@
   * Added ajaxometer.ping file to be fetched during our ping test instead
     of ajaxometer.php?len=1, this should help with the extremely high latency
     caused from php/cgi configurations.
+  * Added 3.5 MB upload cap for opera browsers, they error out if we try
+    to allocate much more than that it seems.
 
 [2007-04-05] Akita 
   * Added check so that we don't reallocate our upload data if we already have
