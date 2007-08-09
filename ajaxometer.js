@@ -3,29 +3,29 @@
 
 /** Config **/
 /* This controls how long a download should take. */
-var AJAXOmeterTestTime            = 1000; // in miliseconds (this will only be an aproximation)
+var AJAXOmeterTestTime            = 1000;      // in miliseconds (this will only be an aproximation)
 var AJAXOmeterTerminalLineHeight  = 40;
 var AJAXOmeterNumPingsToRun       = 15;
 var AJAXOmeterNumDLsToRun         = 5;
 var AJAXOmeterNumULsToRun         = 5;
 var AJAXOmeterAvgModemSpeed       = 28800;
 var AJAXOmeterAvgWebPageSize      = 130000;
-var AJAXOmeterProtocolOverhead    = 1.08; // +8% or there abouts ... 
-var AJAXOmeterCalibrationSlack    = 0.86; /* seems like a good magic number?  Decrease this if you are
-                                           * on a jittery network or running at high speeds (>=Gb networks). */
-var AJAXOmeterInitialDownloadSize = 4096; /* bytes */
-var AJAXOmeterInitialUploadSize   = 4096; /* bytes */
-var AJAXOmeterMaxCalibrationSteps = 20;   /* In most cases we don't need this many and will exit before this, but when 
-                                           * we have a lot of jitter we need to limit our selves so we don't attemp to
-                                           * sit there and calibrate in a sea of chaos network chaos... */
-var AJAXOmeterMinCalibrationSteps = 4;    /* Always calibrate a little bit .. */
+var AJAXOmeterProtocolOverhead    = 1.08;      // +8% or there abouts ... 
+var AJAXOmeterCalibrationSlack    = 0.86;      /* seems like a good magic number?  Decrease this if you are
+                                                * on a jittery network or running at high speeds (>=Gb networks). */
+var AJAXOmeterInitialDownloadSize = 4096;      /* bytes */
+var AJAXOmeterInitialUploadSize   = 4096;      /* bytes */
+var AJAXOmeterMaxCalibrationSteps = 20;        /* In most cases we don't need this many and will exit before this, but when 
+                                                * we have a lot of jitter we need to limit our selves so we don't attemp to
+                                                * sit there and calibrate in a sea of chaos network chaos... */
+var AJAXOmeterMinCalibrationSteps = 4;         /* Always calibrate a little bit .. */
 var AJAXOmeterMaxUploadSize       = 8388000;   /* 8 MB. This is the default post size limit for 
                                                 * most server setups, so more than this is useless. */
 var AJAXOmeterMaxDownloadSize     = 67108864;  /* 64 MB. Be sure to set this in ajaxometer.php too. */
 
 /* Only change these if you are messing with the .svg file. */
-var AJAXOmeterViewWidth           = 1600; // you need to change this in the .svg file as well.
-var AJAXOmeterViewHeight          = 1200; // you need to change htis in the .svg file as well.
+var AJAXOmeterViewWidth           = 1600;      // you need to change this in the .svg file as well.
+var AJAXOmeterViewHeight          = 1200;      // you need to change htis in the .svg file as well.
 
 
 
@@ -262,7 +262,8 @@ AJAXOmeter.prototype.ping                        = function (toCallWhenDone) { /
   self.terminalPrint("ping() -> ");
 
   var start = new Date();
-  pull("ajaxometer.php?len=1", "", function () {
+  //pull("ajaxometer.php?len=1", "", function () {
+  pull("ajaxometer.ping", "", function () {
     var end = new Date();
     var latency = end.getTime() - start.getTime();
     self.latency.push(latency);

@@ -21,7 +21,7 @@
 1. Installation
 ===============
   
-  Simply place the four ajaxometer.* files in your desired directory and point
+  Simply place the five ajaxometer.* files in your desired directory and point
   the user to ajaxometer.php
 
   
@@ -45,7 +45,7 @@
   Lobo Internet Services, Ltd.  ( http://lobo.net/ )
      * Has provided company time for the initial programmers to do AJAXOmeter 
 
-  Akita Bright-Holloway (akitabright@users.sourceforge.net)
+  Akita Noek (akitanoek@users.sourceforge.net)
      * Initial author
 
   Sheldon Jones

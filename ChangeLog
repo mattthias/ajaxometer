@@ -1,7 +1,12 @@
+[2007-08-09] Akita
+  * Added ajaxometer.ping file to be fetched during our ping test instead
+    of ajaxometer.php?len=1, this should help with the extremely high latency
+    caused from php/cgi configurations.
+
 [2007-04-05] Akita 
   * Added check so that we don't reallocate our upload data if we already have
     chunk of data the same size. This should fix some IE out of memory issues
-    when we are running tests on 'fast' networks (ex. Gb lans..).
+    when we are running tests on 'fast' networks (e.g., Gb lans..).
   * Added min/max number of calibration steps to ensure we don't sit around
     forever trying to calibrate. 
   * Added max upload/download sizes.. ones max upload size should be tuned to

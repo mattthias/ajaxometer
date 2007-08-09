@@ -19,7 +19,6 @@ if (isset($_REQUEST['len']))  {
     echo $d;
   }
   die(str_repeat("x", 64000+$v));
-  //die(str_repeat("x", $_REQUEST['len']));  /* for big requests lets start spraying it out in chunks so we don't kill our server. */
 }
 if (isset($_REQUEST['data'])) { die ("null"); }
 ?>
