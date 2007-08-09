@@ -1,5 +1,5 @@
 <?php
-/* Copyright (c) 2006, Lobo Internet Services, Ltd.  All rights reserved. */
+/* Copyright (c) 2007, Akita Noek.  All rights reserved. */
 
 $ajaxometer_width  = 800;
 $ajaxometer_height = 600;
