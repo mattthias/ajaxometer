@@ -1,3 +1,5 @@
+[2007-08-09] Akita - 1.0.0 released
+
 [2007-08-09] Akita
   * Added ajaxometer.ping file to be fetched during our ping test instead
     of ajaxometer.php?len=1, this should help with the extremely high latency

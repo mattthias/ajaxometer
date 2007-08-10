@@ -1,6 +1,6 @@
 VERSION=1.0.0
 NAME=AJAXOmeter
-FILES=LICENSE README ChangeLog ajaxometer.js ajaxometer.php ajaxometer.svg ajaxometer.css
+FILES=LICENSE README ChangeLog ajaxometer.js ajaxometer.php ajaxometer.svg ajaxometer.css ajaxometer.ping
 
 
 DIR=$(NAME)-$(VERSION)
