@@ -557,7 +557,7 @@ AJAXOmeter.prototype.getAvgULRate                = function () { /* {{{ */
   return prettyRate(this.upbps.avg()*8);
 } /* }}} */
 AJAXOmeter.prototype.getAvgDLbps                 = function () { /* {{{ */
-  this.upbps.filterMax();
+  this.downbps.filterMax();
   return this.downbps.avg()*8*AJAXOmeterProtocolOverhead;
 } /* }}} */
 AJAXOmeter.prototype.getAvgULbps                 = function () { /* {{{ */
