@@ -348,6 +348,8 @@ AJAXOmeter.prototype.calibrate                   = function (toCallWhenDone) { /
       } else if (size > AJAXOmeterMaxDownloadSize) {
         size = AJAXOmeterMaxDownloadSize/2;
         self.numDLCalibration = AJAXOmeterMaxCalibrationSteps;
+      } else if (size < 1) {
+        size = 1;
       }
       self.numDLCalibration++;
       self.downloadTest(size, function () { runDownloadTest(size*2, toCallWhenDone); });
@@ -356,6 +358,7 @@ AJAXOmeter.prototype.calibrate                   = function (toCallWhenDone) { /
       if (self.goodDLSize > AJAXOmeterMaxDownloadSize) {
         self.goodDLSize = AJAXOmeterMaxDownloadSize;
       }
+      if (self.goodDLSize < 1) self.goodDLSize = 1;
       self.terminalPrint("DL Size Calibrated: " + prettySize(self.goodDLSize));
       self.printResults("Test Download Size: " + prettySize(self.goodDLSize));
       if (toCallWhenDone != null) toCallWhenDone();
@@ -364,7 +367,6 @@ AJAXOmeter.prototype.calibrate                   = function (toCallWhenDone) { /
 
   function runUploadTest(size, toCallWhenDone) {
     self.totalULCalibrationTime += self.lastRunTime;
-    //if (self.lastRunTime < AJAXOmeterTestTime * AJAXOmeterCalibrationSlack) {
     if (self.numULCalibration < AJAXOmeterMinCalibrationSteps ||
         (self.numULCalibration < AJAXOmeterMaxCalibrationSteps &&
          ((self.lastRunTime < AJAXOmeterTestTime * AJAXOmeterCalibrationSlack) ||
@@ -379,7 +381,9 @@ AJAXOmeter.prototype.calibrate                   = function (toCallWhenDone) { /
       } else if (size > AJAXOmeterMaxUploadSize) {
         size = AJAXOmeterMaxUploadSize/2;
         self.numULCalibration = AJAXOmeterMaxCalibrationSteps;
-      }
+      } else if (size < 1) {
+        size = 1;
+      } 
       self.numULCalibration++;
       self.uploadTest(size, function () { runUploadTest(size*2, toCallWhenDone); });
     } else {
@@ -387,6 +391,7 @@ AJAXOmeter.prototype.calibrate                   = function (toCallWhenDone) { /
       if (self.goodULSize > AJAXOmeterMaxUploadSize) {
         self.goodULSize = AJAXOmeterMaxUploadSize;
       }
+      if (self.goodULSize < 1) self.goodULSize = 1;
       self.terminalPrint("UL Size Calibrated: " + prettySize(self.goodULSize));
       self.printResults("Test Upload Size: " + prettySize(self.goodULSize));
       self.snapshotProgress("Calibration Done");
@@ -433,8 +438,12 @@ AJAXOmeter.prototype.speedTest                   = function () { /* {{{ */
   function printSummary() {
     self.printSummary("Estimated Line Type: " + self.estimateLineType());
     self.printSummary("( ~" + (self.getAvgDLbps()/AJAXOmeterAvgModemSpeed).toFixed(1) + " x faster than avg. modem speeds)");
+    self.printSummary("Time to load an average web page: ~" + prettyTime((AJAXOmeterAvgWebPageSize*8)/self.getAvgDLbps()));
+    self.printSummary("Time to download 10MB file: ~" + prettyTime((10000000*8)/self.getAvgDLbps()));
+/*
     self.printSummary("Time to load an average web page: ~" + ((AJAXOmeterAvgWebPageSize*8)/self.getAvgDLbps()).toFixed(2) + " s");
     self.printSummary("Time to download 10MB file: ~" + ((10000000*8)/self.getAvgDLbps()).toFixed(0) + " s");
+*/
   }
 
   function RunSpeedTests () {
@@ -687,6 +696,29 @@ function prettyRate(bps) { /* {{{ */
   var rate = prettySize(bps);
   rate = rate.substring(0,rate.length-1) + 'b/s';
   return rate;
+} /* }}} */
+function prettyTime(pSecs) { /* {{{ */
+  
+
+  /* recursive for days, hours and minutes */
+  switch ( true ) {
+    case ( isNaN(pSecs) ):
+      return "Unknown";
+    case ( pSecs == Infinity ):
+      return "Unknown";
+    case (pSecs >= 86400):     /* days */
+      return (pSecs / 86400).toFixed(0) + " days " + prettyTime(pSecs % 86400);
+    case (pSecs >= 3600 ):     /* hours */
+      return (pSecs / 3600).toFixed(0) + " hr " + prettyTime(pSecs % 3600);
+    case (pSecs >= 60 ):       /* minutes */
+      return (pSecs / 60).toFixed(0) + " min " + prettyTime(pSecs % 60);
+    case (pSecs < 60):
+      return (1.0*pSecs).toFixed(1) + " s "
+    default:
+        return "Unknown";
+  }
+
+
 } /* }}} */
 var n_genStr = 0;
 function genStr(len) { /* {{{ */

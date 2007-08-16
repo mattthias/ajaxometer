@@ -1,3 +1,11 @@
+[2007-08-16] Akita
+  * Incorporated Greg N's patches for making things work better over dialup
+    connections.
+
+[2007-08-14] Akita
+  * Gen some random data instead of a bunch of x's.. should have been doing
+    this awhile ago.. this should help thwart compression engines though.
+
 [2007-08-09] Akita - 1.0.0 released
 
 [2007-08-09] Akita

@@ -42,9 +42,6 @@
 3. Contributors
 ==============
 
-  Sonic Whale.  ( http://sonicwhale.com/ )
-     * Testing resources and developer time
-
   Akita Noek (akitanoek@users.sourceforge.net)
      * Initial author
 
@@ -54,6 +51,15 @@
 
   Clancy
      * Bb/s bug found [2006-11-18]
+
+  Greg N 
+     * Bug fixes and patches for making things work better on dialup and over
+       compressed connections.  [Aug. 2007]
+
+
+
+  Sonic Whale.  ( http://sonicwhale.com/ )
+     * Testing resources and developer time
 
   Lobo Internet Services, Ltd.  ( http://lobo.net/ )
      * Provided company time for the initial programming work

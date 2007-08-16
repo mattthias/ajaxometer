@@ -8,17 +8,22 @@ $max_download_size = 67108864; /* 64MB. */
 
 
 if (isset($_REQUEST['len']))  { 
-  $v = intval($_REQUEST['len']);
-  if ($v > $max_download_size) $v = $max_download_size;
+  $len = intval($_REQUEST['len']);
+  if ($len > $max_download_size) $len = $max_download_size;
 
-  if ($v < 64000) 
-    die(str_repeat("x", $v)); 
 
-  $d = str_repeat("x", 64000);
-  for (; $v >= 0; $v-=64000) {
-    echo $d;
+  $blk_size = 8192;
+  $blk = "";
+  for ($i=0; $i < $blk_size/8; ++$i) {
+    $blk .= chr(rand()) . chr(rand()) . chr(rand()) . chr(rand()) . chr(rand()) . chr(rand()) . chr(rand()) . chr(rand());
   }
-  die(str_repeat("x", 64000+$v));
+
+  while ($len > $blk_size) {
+    echo $blk;
+    $len -= $blk_size;
+  }
+
+  die(substr($blk, 0, $len));
 }
 if (isset($_REQUEST['data'])) { die ("null"); }
 ?>
