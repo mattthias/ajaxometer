@@ -61,7 +61,7 @@ if (navigator.mimeTypes != null && navigator.mimeTypes.length > 0) {
   }
 }
 
-if (/Firefox\/[2-9]./.test(navigator.userAgent)) {
+if (/Firefox/.test(navigator.userAgent)) {
 		hasSVGSupport = true;
 }
 
@@ -88,11 +88,7 @@ if (hasSVGSupport) {
 </script>
 <noscript>
   Unfortunately, your browser either doesn't have support for JavaScript, or 
-  its not enabled. This speed test requires both. If you do not feel
-  comfortable enabling JavaScript in your current browser for security 
-  reasons, try using a more secure browser such as
-  Mozilla Firefox (<a href="http://www.getfirefox.com/">http://www.getfirefox.com/</a>) or
-  Opera (<a href="http://www.opera.com/">http://www.opera.com/</a>).
+  it's not enabled. This speed test requires both.
 </noscript>
 
 <!-- End Paste -->
